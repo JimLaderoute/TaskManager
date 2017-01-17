@@ -1,0 +1,4 @@
+1/16/17  Started the project
+1/16/17  taskmanager.html,  taskmanager.css (started)
+1/16/17  Asked Dan to provide a couple of images for start and stop timer
+1/16/17  Calling it a night: 11:03pm

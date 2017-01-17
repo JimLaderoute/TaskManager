@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Task Manager V1.0 Jan 16 2017 by James Laderoute</title>
+    <link rel="stylesheet" href="taskmanager.css" />
+    
+    <!-- insert the script to reference jQuery here -->
+
+    <script type="text/javascript" src="jquery-3.1.1.js"></script>
+     
+    <!-- insert the script to add rows of tasks to the list -->
+    <script>
+    $("document").ready(function() {
+    $("#TaskListing table").append("<tr><td id=Begin>X</td><td id=Cat>Category1</td><td>First Title</td><td>0:0:0</td></tr>");
+    $("#TaskListing table").append("<tr><td id=Begin>_</td><td id-Cat>Category2</td><td>2nd Title</td><td>0:0:0</td></tr>");
+    })
+    </script>
+    
+    
+</head>
+
+
+<body>
+    
+<div id="TaskListing">
+    <table>
+        <th>Run</th>
+        <th>Category</th>
+        <th>Title</th>
+        <th>Elapsed</th>
+    </table>
+</div>
+    
+<div id="controls">
+    <button id="CreateNew">New Task</button>    
+    <button id="RemoveSel">Remove Selected</button>
+</div>    
+    
+    
+</body>
+
+</html>

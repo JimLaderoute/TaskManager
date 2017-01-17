@@ -1,0 +1,74 @@
+html {
+    background: #e6e9e9; 
+    /* CSS3 to do linear-gradients */
+   /* background-image: linear-gradient(270deg, rgb(230, 233, 233) 0%, rgb(216, 221, 221) 100%); */
+    background: linear-gradient(white,grey);      /* W3C */
+}
+
+body {
+    background: #fff;
+    background-image: linear-gradient(black, blue);
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.06);
+    color: #333333;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 2 auto;
+    max-width: 2000px;
+    max-height: 2000px;
+    padding: 2em 2em 4em;
+}
+
+button {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    margin: 2 auto;
+    padding: 1em 1em 1em;
+}
+
+#Begin {
+    width: 1em;
+    padding: .5em .5em .5em;
+}
+
+#Cat {
+    width: 15%;
+}
+table {
+    border-collapse: collapse;
+    border: 1px solid black;
+    width: 100%;
+}
+
+th, td {
+    border: 1px solid black;
+    color: black;
+    text-align: left;
+}
+
+div#TaskListing {
+    background: #49a;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
+    max-height: 1000px;
+    color: #646464;
+    font-size: 16px;
+    line-height: 2.0;
+    margin: 1em auto;
+    padding: 2em 2em 3em;
+}
+
+
+/* LEARN:BLINK This is how you would make a button text blink */
+
+@keyframes blink {
+    to { color:red }
+    
+}
+
+#CreateNew {
+    color:blue;
+    animation: blink 1s steps(2,start) infinite;
+}
+
+/* end of blink */
+

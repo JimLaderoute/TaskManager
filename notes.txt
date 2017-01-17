@@ -1,0 +1,37 @@
+FRONT-END GUI
+
+
+Using JSON to store the tasks - fed by server to client.
+
+COLUMNS PRESENTED:
+====================================
+Clock-Icon
+Start/Stop
+Timer Per Task : Boolean
+
+Liveness : HISTORIC|CURRENT : can be an integer
+
+Task Category Name : Text
+
+Task Subject Name (short name) : Text
+
+Time Spent/Today (hour:minute:second)
+Percent Time Today based on all current tasks.  %spent based on 0-100%
+Total Time Since Start (weeks:days:hours:minutes:seconds)
+
+
+ACTIONS PRESENTED:
+=====================================
++ Add New Task
++ Select/Deselect Tasks
++ Change Liveness of selected tasks (toggle thru HISTORIC|CURRENT)
++ Activate Task ( starts the CLOCK on it)
++ Pause/Stop Task ( stops the clock from tracking it)
++ Generate Status Report
+
+
+STORIES:
+======================================
++ What if client goes home but forgot to turn off the running timers?
+  We would define a customizable auto-stop time of 5:00pm ; and notify the client about it
+

@@ -1,0 +1,10 @@
+Things Not Yet Done but should get done
+
+o Create github account for Danny so we can share code. (1 hour)
+
+o Show Dan how to use github (1 hour - basic command set)
+
+o Watch more jQuery training video (1 hour)
+
+o Setup Beagle-bone Server - install html/css/javascript webpage here
+  o setup apache server to host the webpages  (?)
