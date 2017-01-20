@@ -3,7 +3,7 @@
 
 <head>
     <title>Task Manager V1.0 Jan 16 2017 by James Laderoute</title>
-    <link rel="stylesheet" href="taskmanager.css" />
+    <link rel="stylesheet" href="taskmanager.css" /> 
     
     <!-- insert the script to reference jQuery here -->
 
@@ -12,19 +12,77 @@
     <!-- insert the script to add rows of tasks to the list -->
     <script>
     $("document").ready(function() {
-    $("#TaskListing table").append("<tr><td id=Begin>X</td><td id=Cat>Category1</td><td>First Title</td><td>0:0:0</td></tr>");
-    $("#TaskListing table").append("<tr><td id=Begin>_</td><td id-Cat>Category2</td><td>2nd Title</td><td>0:0:0</td></tr>");
+        
+        
+        $("#CreateNew").on( 'click', newTask );      
+        $("#RemoveSel").on( 'click', removeTasks );
+        
+        
+        function newTask(evt)
+        {
+            /* get the strings from the Category and Title input text widgets - TBD */
+            var catstr = $("#CategoryInput").val();
+            var titlestr = $("#TitleInput").val();
+            /* Now add a new task to the table */
+            addNewRow( true, catstr, titlestr );
+        }
+        
+        function addNewRow( startTimer, catstr, titlestr )
+        {
+            var ischecked = "";
+            if (startTimer) 
+            {
+                ischecked = "checked";
+            }
+            
+             $("#TaskListing table").append(
+                 "<tr id=TaskId>" + 
+                "<td id=Begin><input id=onoff type=checkbox " + ischecked + "></td>" +
+                "<td id=Cat>" + catstr + "</td>" +
+                "<td it=Title>" + titlestr + "</td>" + 
+                "<td id=Time>0:0:0</td>" + 
+                "<td id=Trash><button id=TrashRow>X</button></td>" + 
+                "</tr>");           
+        }
+        
+        function removeTasks(evt)
+        {
+            /* Find all tasks that are checked-on and delete them */
+            //var c = confirm('Continue with delete?');
+            var c = true;
+            if(c) {
+                jQuery('input:checkbox:checked').parents("tr").fadeOut(function() {
+                    var $this = $(this);
+                    $this.remove();
+                });
+            }
+            
+        }
+        
+        function populate()
+        {
+            for (var i=0; i < 50; i++) {
+                addNewRow( false, "Cat"+i , "Title "+i);
+            }
+            addNewRow( false, "Category1", "1st Title String");
+            addNewRow( false, "Category2", "2nd Title String");    
+            addNewRow( false, "Category3", "3rd Title String");
+
+        }
+        
+        populate();
+
     })
     </script>
     
-    
+
 </head>
 
 
 <body>
     
 <div id="TaskListing">
-    <table>
+    <table  >
         <th>Run</th>
         <th>Category</th>
         <th>Title</th>
@@ -33,8 +91,12 @@
 </div>
     
 <div id="controls">
-    <button id="CreateNew">New Task</button>    
-    <button id="RemoveSel">Remove Selected</button>
+    <button id="CreateNew">New Task</button>
+    <input type="search" id="CategoryInput" name="search" placeholder="Category"></input>
+    <input type="search" id="TitleInput" name="title" placeholder="Title"></input>
+        
+    <br><br>
+    <button id="RemoveSel">Remove Selected</button>        
 </div>    
     
     

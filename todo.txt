@@ -1,10 +1,13 @@
 Things Not Yet Done but should get done
 
-o Create github account for Danny so we can share code. (1 hour)
+1/17/2017
 
-o Show Dan how to use github (1 hour - basic command set)
+o Create github account for Danny so we can share code. (1 hour) [done]
 
-o Watch more jQuery training video (1 hour)
+o Show Dan how to use github [done - emailed instructions]
+
+o Watch more jQuery training video (1 hour) [done]
 
 o Setup Beagle-bone Server - install html/css/javascript webpage here
   o setup apache server to host the webpages  (?)
+
