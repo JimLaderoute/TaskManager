@@ -34,7 +34,7 @@ input {
 }
 
 #Begin {
-    width: 1em;
+    width: 5%;
     padding: .5em .5em .5em;
 }
 
@@ -46,8 +46,12 @@ input {
     width: 70%;
 }
 
-#Trash {
+#Elapsed {
     width: 5%;
+}
+
+#Trash {
+    width: 2%;
 }
 
 table {
@@ -63,6 +67,12 @@ th, td {
     border: 1px solid black;
     color: black;
     text-align: left;
+}
+
+.divider {
+    width: 5px;
+    height: auto;
+    display:inline-block;
 }
 
 div#TaskListing {
