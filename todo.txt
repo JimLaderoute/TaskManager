@@ -3,10 +3,16 @@ Things Not Yet Done but should get done
 1/17/2017
 
 o Create github account for Danny so we can share code. (1 hour) [done]
-
 o Show Dan how to use github [done - emailed instructions]
-
 o Watch more jQuery training video (1 hour) [done]
+
+1/21/2017
+
+o Change row background color immediately when we change toggle state of the timer
+o Figure out how to update the elapsed time [done]
+o Save changes out to a file (or database)
+o Read tasks from a file (or database)
+o Allow more than one person at a time to use this ( username based )
 
 o Setup Beagle-bone Server - install html/css/javascript webpage here
   o setup apache server to host the webpages  (?)

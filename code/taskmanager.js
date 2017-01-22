@@ -2,7 +2,59 @@
 
 $("document").ready(function () {
  
-    var number=1;
+    var number= 1;
+    var timerVar = setTimeout( timeoutCallback, 5000);
+    
+    function convertToMillisec( hr_min_sec ) {
+        var timearr = hr_min_sec.split(":");
+        var ms = 0;
+        
+        ms = ms + parseInt(timearr[2]) * 1000;             // seconds to milliseconds
+        ms = ms + parseInt(timearr[1]) * 60 * 1000;        // minutes to milliseconds
+        ms = ms + parseInt(timearr[0]) * 60 * 60 * 1000;    // hours to milliseconds
+        
+        return ms;
+    }
+    
+    function millisecToHrMinSec( nMillisec ) {
+        var nHours = parseInt( nMillisec / ( 60 * 60 * 1000) );
+        nMillisec -= (nHours * 60 * 60 * 1000) ;
+        
+        var nMin = parseInt( nMillisec / ( 60 * 1000) );
+        nMillisec -= (nMin * 60 * 1000);
+        
+        var nSec = parseInt( nMillisec / 1000 );
+        
+        return ""+nHours+":"+nMin+":"+nSec+"";
+    }
+    
+    // we are calling this every 5 seconds
+    function timeoutCallback () {
+        
+        // get all checkbox objects
+        $("#TaskListing table tr td#Begin input").each(function (index, element) {
+            
+            var theRow = $(element).parent().parent(); // get the parent row of the checkbox
+            var theTimer = $(theRow).children("tr td#Time:first");
+            
+            // element is a table-row-td input-checkbox
+            if (element.checked) {
+                // add timeperiod to elapsed (5000 ms)
+                var currentvalue = convertToMillisec( theTimer.text() );
+                var newvalue = millisecToHrMinSec( currentvalue + 5000 );
+
+                $(theRow).css( "background", "#eee");
+                
+               // var theTimer = $(theRow).select
+                theTimer.text( newvalue );
+            } else {
+                $(theRow).css("background", "white");
+            }
+        });
+        
+        timerVar = setTimeout(timeoutCallback, 5000);
+    }
+    
     
     function addNewRow (startTimer, catstr, titlestr) {
         var ischecked = "";
@@ -15,7 +67,7 @@ $("document").ready(function () {
               "<td id=Begin><input id=onoff type=checkbox " + ischecked + "></td>" +
               "<td id=Cat>" + catstr + "</td>" +
               "<td it=Title>" + titlestr + "</td>" +
-              "<td id=Time>0:0:0</td>" +
+              "<td id=Time><p>0:0:0</p></td>" +
               "<td id=Trash ><input name=TrashInput" + number + " type=image src=trashcan.jpg height=30 width=30 /></td>" +
             "</tr>"
         );
@@ -68,5 +120,6 @@ $("document").ready(function () {
     
     $("#CreateNew").on('click', newTask );      
     $("#RemoveSel").on('click', removeTasks );
+//    $(":checkbox").change( toggleTimer );
     
 })

@@ -38,6 +38,10 @@ input {
     padding: .5em .5em .5em;
 }
 
+#onoff {
+    zoom: 2.0;
+}
+
 #Cat {
     width: 15%;
 }
