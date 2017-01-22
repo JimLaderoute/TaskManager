@@ -56,7 +56,7 @@ $("document").ready(function () {
     }
     
     
-    function addNewRow (startTimer, catstr, titlestr) {
+    function addNewRow (startTimer, catstr, titlestr, elapsed) {
         var ischecked = "";
         if (startTimer) {
             ischecked = "checked";
@@ -88,7 +88,7 @@ $("document").ready(function () {
         var catstr = $("#CategoryInput").val();
         var titlestr = $("#TitleInput").val();
         /* Now add a new task to the table */
-        addNewRow(true, catstr, titlestr);
+        addNewRow(true, catstr, titlestr, "0:0:0");
     }
        
     function removeTasks(evt) {
@@ -105,14 +105,14 @@ $("document").ready(function () {
     }
 
     function populate() {
-        
        
-        for (var i=0; i < 5; i++) {
-            addNewRow( false, "Cat"+i , "Title "+i);
+        //obj = JSON.parse(data);
+        obj = data;
+        
+        for (var i=0; i < obj.length; i++) {
+            addNewRow( false, obj[i].category , obj[i].title, obj[i].elapsed );
         }
-        addNewRow( false, "Category1", "1st Title String");
-        addNewRow( false, "Category2", "2nd Title String");    
-        addNewRow( false, "Category3", "3rd Title String");
+//        addNewRow( false, "Category3", "3rd Title String", "0:0:0");
 
     }
 

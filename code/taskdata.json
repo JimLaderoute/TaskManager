@@ -1,0 +1,9 @@
+/* we can store the json data as one big string ; as what would happen when calling JSON.stringify(myObj) or
+   we can store it like a javascript file itself. If you store it as a full string then you have to parse it
+   into a javascript object with obj=JSON.parse(text); */
+
+// data = '[{"category":"Cat1","title":"Title 1","elapsed":"00:10:00"},{"category":"Cat2","title":"Title 2","elapsed":"01:10:00"}]';
+
+data = [{"category":"Cat1","title":"Title 1","elapsed":"00:10:00"},
+        {"category":"Cat2","title":"Title 2","elapsed":"01:10:00"} 
+       ];
