@@ -8,12 +8,27 @@ o Watch more jQuery training video (1 hour) [done]
 
 1/21/2017
 
-o Change row background color immediately when we change toggle state of the timer
 o Figure out how to update the elapsed time [done]
-o Save changes out to a file (or database)
-o Read tasks from a file (or database)
-o Allow more than one person at a time to use this ( username based )
 
+1/26/2017
+
+o Change row background color immediately when we change toggle state of the timer [done]
+o Add unique id column so we can easily track each task by id number [done]
+o Store high-precision elapsed time as a JQuery Data item to prevent roundoff errors [done]
+o Share time-chunk across all enabled tasks [done]
+
+FUTURE TO DOS
+
+o Save changes out to a JSON file (or database)
+o Read tasks from a JSON file (or database) --- currently including taskmanager.json file into the html
+o Modify Existing Tasks (edit category, title, add/subtract hours or minutes from elapsed time)
+o I'm currently using <table> object for the info. I believe there is a nicer TABLE .js package out there that I could use. Probably would allow sorting of columns and resizing of columns.
+o Allow more than one person at a time to use this ( username based )
 o Setup Beagle-bone Server - install html/css/javascript webpage here
   o setup apache server to host the webpages  (?)
+
+
+Maybe set priorities of these tasks?
+
+Currently everything is working just fine on windows without needing a backend server, nothing fancy needed yet.
 

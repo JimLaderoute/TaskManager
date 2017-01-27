@@ -4,6 +4,6 @@
 
 // data = '[{"category":"Cat1","title":"Title 1","elapsed":"00:10:00"},{"category":"Cat2","title":"Title 2","elapsed":"01:10:00"}]';
 
-data = [{"category":"Cat1","title":"Title 1","elapsed":"00:10:00"},
-        {"category":"Cat2","title":"Title 2","elapsed":"01:10:00"} 
+data = [{"idnum":1,"category":"Cat1","title":"Title 1","elapsed":5000},
+        {"idnum":2,"category":"Cat2","title":"Title 2","elapsed":10500} 
        ];

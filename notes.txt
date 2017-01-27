@@ -35,3 +35,6 @@ STORIES:
 + What if client goes home but forgot to turn off the running timers?
   We would define a customizable auto-stop time of 5:00pm ; and notify the client about it
 
++ Allow the user to start a timer at work and stop it from home
+
+
