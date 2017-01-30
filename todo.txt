@@ -9,6 +9,7 @@ o Watch more jQuery training video (1 hour) [done]
 1/21/2017
 
 o Figure out how to update the elapsed time [done]
+  timerVar = setTimeout(timeoutCallback, timePeriod);
 
 1/26/2017
 
@@ -16,6 +17,16 @@ o Change row background color immediately when we change toggle state of the tim
 o Add unique id column so we can easily track each task by id number [done]
 o Store high-precision elapsed time as a JQuery Data item to prevent roundoff errors [done]
 o Share time-chunk across all enabled tasks [done]
+
+1/29/2017
+
+o Dan tuned the look and feel of the web-app so it looks better
+o Removed highlight of the row when you start the timer - this will mess up the nice zebra-coloring and it's really not needed.
+o Updating elapsed time every 1 second now instead of every 5 seconds (not a resource issue at all)
+o Made Title and Category editable in-place via contenteditable='true' setting
+  <td id=Title contenteditable='true'> textual content </td>
+o Double-clicking on Elapsed data clears the timer back to 0 seconds - but really want to edit the time for the day.
+
 
 FUTURE TO DOS
 

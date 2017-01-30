@@ -2,46 +2,44 @@
 
 $("document").ready(function () {
  
-    var highestNumber = 1;
-    var timePeriod = 5000
-    var timerVar = setTimeout( timeoutCallback, timePeriod);
+    var highestNumber = 1, timePeriod = 1000, timerVar = setTimeout(timeoutCallback, timePeriod);
     
-    function convertToMillisec( hr_min_sec ) {
-        var timearr = hr_min_sec.split(":");
-        var ms = 0;
+    function convertToMillisec(hr_min_sec) {
+        var timearr = hr_min_sec.split(":"), ms = 0;
         
-        ms = ms + parseInt(timearr[2]) * 1000;             // seconds to milliseconds
-        ms = ms + parseInt(timearr[1]) * 60 * 1000;        // minutes to milliseconds
-        ms = ms + parseInt(timearr[0]) * 60 * 60 * 1000;    // hours to milliseconds
+        ms = ms + parseInt(timearr[2], 10) * 1000;             // seconds to milliseconds
+        ms = ms + parseInt(timearr[1], 10) * 60 * 1000;        // minutes to milliseconds
+        ms = ms + parseInt(timearr[0], 10) * 60 * 60 * 1000;    // hours to milliseconds
         
         return ms;
     }
     
-    function millisecToHrMinSec( nMillisec ) {
-        var nHours = parseInt( nMillisec / ( 60 * 60 * 1000) );
-        nMillisec -= (nHours * 60 * 60 * 1000) ;
+    function millisecToHrMinSec(nMillisec) {
+        var nHours = parseInt(nMillisec / (60 * 60 * 1000), 10);
+        nMillisec -= (nHours * 60 * 60 * 1000);
         
-        var nMin = parseInt( nMillisec / ( 60 * 1000) );
+        var nMin = parseInt(nMillisec / (60 * 1000), 10);
         nMillisec -= (nMin * 60 * 1000);
         
-        var nSec = parseInt( nMillisec / 1000 );
+        var nSec = parseInt(nMillisec / 1000, 10);
         
         
-        return ""+nHours+":"+nMin+":"+nSec;
+        return nHours + ":" + nMin + ":" + nSec;
     }
     
     // we are calling this every 5 seconds
-    function timeoutCallback () {
+    function timeoutCallback() {
         
-        var timeChunk = timePeriod ;
-        var nOn = 0;
+        var timeChunk = timePeriod, nOn = 0;
         
         // one traverse to find out how many toggle buttons are ON
         $("#TaskListing table tr td#Begin input").each(function (index, element) {
-            if (element.checked)  nOn++;
+            if (element.checked) {
+                nOn++;
+            }
         });
         
-        if ( nOn > 1 ) {
+        if (nOn > 1) {
             timeChunk = timePeriod / nOn ;
         }
         
@@ -55,12 +53,12 @@ $("document").ready(function () {
             if (element.checked) {
                 
                 var theRow = $(element).parent().parent();              // get the parent row of the checkbox
-                var currentvalue = $(theRow).data("millisex");          // get last stored millisec elapsed time
+                var currentvalue = $(theRow).data("millisecs");          // get last stored millisec elapsed time
                 var newvalue = currentvalue + timeChunk;                // add in the time chunk to get new elapsed time
-                $(theRow).data("millisex", newvalue);                   // save back on the object as data to the row
+                $(theRow).data("millisecs", newvalue);                   // save back on the object as data to the row
 
                 var theTimer = $(theRow).children("tr td#Time:first");  // get the Time data field and update                
-                theTimer.text( millisecToHrMinSec(newvalue) );
+                theTimer.text(millisecToHrMinSec(newvalue));
                 
             }
         });
@@ -69,68 +67,72 @@ $("document").ready(function () {
         timerVar = setTimeout(timeoutCallback, timePeriod);
     }
     
-    function toggleChanged ( evt ) {
-        if ( this.checked == true ) {
-            $(this).parent().parent().css( "background",  "#eee");
-        } else {
-            $(this).parent().parent().css("background", "white");
-        }
+    function storeElapsed( idnum, elapsed ) {
+        $("#TaskListing table tr td#Unique").each(function (index, element) {
+            if (element.textContent == idnum) {
+                $(element).parent().data("millisecs", elapsed);  //  Update the elapsed time in milliseconds on the row obj
+            }
+        });
     }
     
-    function addNewRow (startTimer, idnum, catstr, titlestr, elapsed) {
+    function toggleChanged(evt) {
+        /*
+        if (this.checked == true) {
+          $(this).parent().parent().css( "background",  "#eee");
+        } else {
+          $(this).parent().parent().css("background", "white");
+        }
+        */
+    }
+    
+    function addNewRow(startTimer, idnum, catstr, titlestr, elapsed) {
         var ischecked = "";
         if (startTimer) {
             ischecked = "checked";
         }
         
-        if ( idnum > highestNumber) {
+        if (idnum > highestNumber) {
             highestNumber = idnum;
         }
         
-        var timeStr = millisecToHrMinSec( elapsed );
+        var timeStr = millisecToHrMinSec(elapsed);
 
         var tableObj = $("#TaskListing table").append(
             "<tr class=rows id=TaskId>" +
               "<td id=Begin><input id=onoff type=checkbox " + ischecked + "></td>" +
               "<td id=Unique>" + idnum + "</td>" +
-              "<td id=Cat>" + catstr + "</td>" +
-              "<td id=Title>" + titlestr + "</td>" +
-              "<td id=Time><p>" + timeStr + "</p></td>" +
-              "<td id=Trash ><input name=TrashInput" + idnum + " type=image src=trashcan.jpg height=30 width=30 /></td>" +
+              "<td id=Cat contenteditable='true'>" + catstr + "</td>" +
+              "<td id=Title contenteditable='true'>" + titlestr + "</td>" +
+              "<td id=Time ondblclick=\"editElapsedTime(" + idnum + ")\">" + timeStr + "</td>" +
+              "<td id=Trash><input name=TrashInput" + idnum + " type=image src=trashcan.jpg height=30 width=30 /></td>" +
             "</tr>"
         );
         
-        // try and find this now and if found then store the elapsed time in millisecond units for accuracy
-        $("#TaskListing table tr td#Unique").each( function (index, element) {       
-           if ( element.textContent == idnum )  {
-               $(element).parent().data("millisex", elapsed);  //  Update the elapsed time in milliseconds on the row obj
-               if ( ischecked ) {
-                    $(element).parent().css( "background",  "#eee");
-               }
-           }
-        });
-        
-            
-        $("input[name=TrashInput" + idnum + "]").click( function (ev) {
+        // store the elapsed time in millisecond units for accuracy
+        storeElapsed( idnum, elapsed );
+       
+        // Add a callback function when the user clicks on the TrashCan icon per row
+        $("input[name=TrashInput" + idnum + "]").click(function (ev) {
             // input.td.tr 
-           $(this).parent().parent().fadeOut(function () {  
+           $(this).parent().parent().fadeOut(function () {
                 $(this).remove();
             }); // removes the row when user clicks on the trashcan
         });
         
-        $("#TaskId #onoff").change( toggleChanged );
+        // Add a callback when the Run Start/Stop checkbox value changes
+        $("#TaskId #onoff").change(toggleChanged);
         
         
     }
 
 
-    function newTask (evt) {
+    function newTask(evt) {
         /* get the strings from the Category and Title input text widgets - TBD */
         
         var catstr = $("#CategoryInput").val();
         var titlestr = $("#TitleInput").val();
         /* Now add a new task to the table */
-        addNewRow(true, (highestNumber+1), catstr, titlestr, 0);
+        addNewRow(true, (highestNumber + 1), catstr, titlestr, 0);
     }
        
     function removeTasks(evt) {
@@ -143,12 +145,11 @@ $("document").ready(function () {
                 $this.remove();
             });
         }
-
     }
 
-    function populate() {     
+    function populate() {
         //obj = JSON.parse(data);
-        obj = data;       
+        var obj = data;
         for (var i=0; i < obj.length; i++) {
             addNewRow( false, obj[i].idnum, obj[i].category , obj[i].title, obj[i].elapsed );
         }
@@ -158,6 +159,27 @@ $("document").ready(function () {
     
     $("#CreateNew").on('click', newTask );      
     $("#RemoveSel").on('click', removeTasks );
+  
     
     
-})
+});
+
+/*
+** this needs to be a global function to work. If it's embedded in the .ready() block, it won't
+** be seen and won't get invoked.
+*/
+
+function editElapsedTime ( idnum ) {
+    // we can popup a dialog box if we wish
+    // but for testing just zero out the time
+
+    $("#TaskListing table tr td#Unique").each(function (index, element) {
+        
+        console.log( "editElapsedTime " + idnum );
+        
+        if (element.textContent == idnum) {
+            $(element).parent().data("millisecs", 0);  //  Update the elapsed time in milliseconds on the row obj
+        }
+    });
+    
+}
