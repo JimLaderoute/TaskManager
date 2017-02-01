@@ -27,23 +27,38 @@ $("document").ready(function () {
         return nHours + ":" + nMin + ":" + nSec;
     }
     
-    // we are calling this every 5 seconds
+    /*
+    ** This is the timer callback function. It fires off at a set interval and
+    ** resets itself at the end to fire off at the same interval.
+    */
+    
     function timeoutCallback() {
         
-        var timeChunk = timePeriod, nOn = 0;
+        var timeChunk = timePeriod, nChecked = 0, totalTimeMs = 0;
         
-        // one traverse to find out how many toggle buttons are ON
+        // First we traverse to find out how many toggle buttons are ON
         $("#TaskListing table tr td#Begin input").each(function (index, element) {
             if (element.checked) {
-                nOn++;
+                nChecked++;
             }
+            
+            var theRow = $(element).parent().parent();              // get the parent row of the checkbox
+            var currentvalue = $(theRow).data("millisecs");         // get last stored millisec elapsed time
+            totalTimeMs = totalTimeMs + currentvalue ;              // keep track of the total millisecs for all tasks
         });
         
-        if (nOn > 1) {
-            timeChunk = timePeriod / nOn ;
+        if (nChecked > 1) {
+            timeChunk = timePeriod / nChecked ;
+            
+        } 
+        
+        if ( nChecked > 0 ) {
+            $("input[name=delete]").removeAttr('disabled');
         }
-        
-        
+        else {
+            $("input[name=delete]").attr('disabled','disabled');
+        }
+              
         // second traverse to add the timeChunk to each that are turned ON
         
         $("#TaskListing table tr td#Begin input").each(function (index, element) {
@@ -52,50 +67,108 @@ $("document").ready(function () {
             // See if the toggle button is checked or not-checked
             if (element.checked) {
                 
-                var theRow = $(element).parent().parent();              // get the parent row of the checkbox
-                var currentvalue = $(theRow).data("millisecs");          // get last stored millisec elapsed time
+                var theRow = $(element).parent().parent();              // get the parent row <tr> of the checkbox-input
+                var currentvalue = $(theRow).data("millisecs");         // get last stored millisec elapsed time
                 var newvalue = currentvalue + timeChunk;                // add in the time chunk to get new elapsed time
-                $(theRow).data("millisecs", newvalue);                   // save back on the object as data to the row
-
-                var theTimer = $(theRow).children("tr td#Time:first");  // get the Time data field and update                
+                $(theRow).data("millisecs", newvalue);                  // save back on the object as data to the row
+                $(theRow).data("changedSinceLastSave", 1);              // marks this row as changed (ie. updated)
+                
+                var theTimer = $(theRow).children("tr td#Time:first");  // get the Time data field and update
                 theTimer.text(millisecToHrMinSec(newvalue));
                 
             }
         });
         
-        // Restart the timer for the next N seconds 
-        timerVar = setTimeout(timeoutCallback, timePeriod);
+        refreshPercent(); // Updates the percent column for every task in the table
+        
+        timerVar = setTimeout(timeoutCallback, timePeriod); // Restart the timer for the next N seconds 
     }
     
-    function storeElapsed( idnum, elapsed ) {
-        $("#TaskListing table tr td#Unique").each(function (index, element) {
-            if (element.textContent == idnum) {
-                $(element).parent().data("millisecs", elapsed);  //  Update the elapsed time in milliseconds on the row obj
-            }
-        });
-    }
-    
-    function toggleChanged(evt) {
+
+    function saveTaskData() {
         /*
-        if (this.checked == true) {
-          $(this).parent().parent().css( "background",  "#eee");
-        } else {
-          $(this).parent().parent().css("background", "white");
-        }
+        ** currently (as of 1/30/2017) the html file includes taskmanager.json file that represents the tasks
+        ** and the state of each task (such as elapsed time) for today.
+        **
+        ** We need to save this task information to a specific DATE file (or databse, etc...) so we can
+        ** go backwards in history to see what we have done. Plus, we have to update the taskmanager.json file
+        ** in case the user closes the web-application and wants to pick up from where he/she left off. 
+        **
         */
+        
+        $("#TaskListing table tr").each(function (index, element) {
+            
+            /*
+            ** Get each field of the task and stuff it into an array (JSON format) that we will then save
+            */
+            
+            // request.post( "your/server/script", { data: jasonData, timeout: 2000 }).then(function(response){ // do something on success})
+
+            // jQuery.post("address", "Blah!", function (data) { alert(data); }) }
+            console.log( element.nodeName );
+        });
+        
     }
     
+    /*
+    ** This function loops thru all of the current tasks and updates their 
+    ** percent finished column.
+    */
+    
+    function refreshPercent(  ) {
+        var totalTimeMs = 0,  fnumber=0.0, currentvalue = 0, changes = 0;
+        
+        /*
+        ** Get the count of total number of tasks in the table (and how many of the rows have been modified since last saved)
+        */
+        $("#TaskListing table tr td#Begin input").each(function (index, element) {
+           var theRow = $(element).parent().parent();
+           currentvalue = $(theRow).data("millisecs");         // get last stored millisec elapsed time
+           changes = changes + $(theRow).data("changedSinceLastSave");      // any change made since last save operation
+           $(theRow).data( "changedSinceLastSave", 0);                      // clear change counter
+           totalTimeMs = totalTimeMs + currentvalue ;          // add to total elapsed time (so we can figure percent per task)
+        });
+
+        /*
+        ** Now update the percentage column with the new value
+        */
+        $("#TaskListing table tr td#Begin input").each(function (index, element) {           
+          var theRow = $(element).parent().parent();
+          var thePercent = $(theRow).children("tr td#Percent:first");
+              currentvalue = $(theRow).data("millisecs");
+              fnumber = currentvalue / totalTimeMs;
+          thePercent.text( 100 * fnumber.toFixed(2));
+
+        });
+        
+        /*
+        ** If changes were detected , then we want to save the changes so we don't loose them.
+        */
+        
+        if ( changes > 0 ) {
+            saveTaskData();
+        }
+    }
+
+    /*
+    ** This function adds a new row of task information to the table
+    */
     function addNewRow(startTimer, idnum, catstr, titlestr, elapsed) {
-        var ischecked = "";
+        var ischecked = "", totalTimeMs = 0;
+        
         if (startTimer) {
             ischecked = "checked";
         }
         
+        /*
+        ** Every task item has a unique number associated with it.
+        ** It's just the highest id number to date plus 1
+        */
         if (idnum > highestNumber) {
             highestNumber = idnum;
         }
         
-        var timeStr = millisecToHrMinSec(elapsed);
+        var timeStr = millisecToHrMinSec(elapsed);  // create a hh:mm:ss string from the elapsed milliseconds
 
         var tableObj = $("#TaskListing table").append(
             "<tr class=rows id=TaskId>" +
@@ -104,23 +177,26 @@ $("document").ready(function () {
               "<td id=Cat contenteditable='true'>" + catstr + "</td>" +
               "<td id=Title contenteditable='true'>" + titlestr + "</td>" +
               "<td id=Time ondblclick=\"editElapsedTime(" + idnum + ")\">" + timeStr + "</td>" +
+              "<td id=Percent>0</td>" +
               "<td id=Trash><input name=TrashInput" + idnum + " type=image src=trashcan.jpg height=30 width=30 /></td>" +
             "</tr>"
         );
+         
+        storeElapsed( idnum, elapsed ); // store the elapsed time in millisecond units for accuracy
         
-        // store the elapsed time in millisecond units for accuracy
-        storeElapsed( idnum, elapsed );
-       
+        if ( elapsed > 0 ) {
+            refreshPercent(); // and since we have added a new task, the percentages might be different , so update
+        }
+        
         // Add a callback function when the user clicks on the TrashCan icon per row
         $("input[name=TrashInput" + idnum + "]").click(function (ev) {
             // input.td.tr 
            $(this).parent().parent().fadeOut(function () {
                 $(this).remove();
             }); // removes the row when user clicks on the trashcan
+            
+            saveTaskData(); // removing a taskitem is a change that requires that we save the data
         });
-        
-        // Add a callback when the Run Start/Stop checkbox value changes
-        $("#TaskId #onoff").change(toggleChanged);
         
         
     }
@@ -138,15 +214,28 @@ $("document").ready(function () {
     function removeTasks(evt) {
         /* Find all tasks that are checked-on and delete them */
         //var c = confirm('Continue with delete?');
-        var c = true;
-        if (c) {
-            jQuery('input:checkbox:checked').parents("tr").fadeOut(function () {
-                var $this = $(this);
-                $this.remove();
-            });
+        var nRemoved = 0;
+
+        jQuery('input:checkbox:checked').parents("tr").fadeOut(function () {
+            var $this = $(this);
+            nRemoved = nRemoved + 1;
+            $this.remove();
+        });
+
+        if ( nRemoved > 0 ) {
+            saveTaskData();
         }
+  
+        /*
+        ** Disable the Delete button - we only re-enable it when a task's elapsed time is changing
+        */
+        $("input[name=delete]").attr('disabled','disabled');
+
     }
 
+    /*
+    ** Read the JSON data and display it
+    */
     function populate() {
         //obj = JSON.parse(data);
         var obj = data;
@@ -159,13 +248,18 @@ $("document").ready(function () {
     
     $("#CreateNew").on('click', newTask );      
     $("#RemoveSel").on('click', removeTasks );
-  
+    
+ //   $("input[type=button,name=delete]").click(function(){
+  //      $("input[type=button,name=delete]").attr('disabled','disabled');
+   // });
     
     
 });
 
 /*
-** this needs to be a global function to work. If it's embedded in the .ready() block, it won't
+** Let the client modify the elapsed time information (to fix errors)
+** 
+** NOTE: this needs to be a global function to work. If it's embedded in the .ready() block, it won't
 ** be seen and won't get invoked.
 */
 
@@ -178,8 +272,29 @@ function editElapsedTime ( idnum ) {
         console.log( "editElapsedTime " + idnum );
         
         if (element.textContent == idnum) {
-            $(element).parent().data("millisecs", 0);  //  Update the elapsed time in milliseconds on the row obj
+            var lastvalue = $(element).parent().data("millisecs");
+            $(element).parent().data("millisecs", 0);              //  Update the elapsed time in milliseconds on the row obj
+            
+            if ( lastvalue != 0) {
+                $(element).parent().data("changedSinceLastSave", 1);   //  Mark the item as changed (ie. modified) used to trigger saving data to database
+            }
         }
     });
     
 }
+
+/*
+** Store the elapsed time onto the row (ie. the 'tr' object)
+*/
+function storeElapsed( idnum, elapsed ) {
+    $("#TaskListing table tr td#Unique").each(function (index, element) {
+        if (element.textContent == idnum) {
+            lastvalue = $(element).parent().data("millisecs");
+            $(element).parent().data("millisecs", elapsed);         //  Update the elapsed time in milliseconds on the row obj
+            if ( lastvalue != elapsed) {
+                $(element).parent().data("changedSinceLastSave", 1);    //  Mark the item as changed (ie. modified) used to trigger saving data to database
+            }
+        }
+    });
+}
+

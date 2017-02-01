@@ -2,20 +2,35 @@ html {
     background: #e6e9e9; 
     /* CSS3 to do linear-gradients */
    /* background-image: linear-gradient(270deg, rgb(230, 233, 233) 0%, rgb(216, 221, 221) 100%); */
-   # background: linear-gradient(white,grey);      /* W3C */
+   #background: linear-gradient(white,grey);      /* W3C */
 }
 
 body {
     background: #eee;
-    #background-image: linear-gradient(grey, white );
-    box-shadow: 0 0 2px rgba(0, 0, 0, 0.06);
-    color: #333333;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 16px;
-    line-height: 1em;
+    margin: 1em 1em 1em 1em;
+    padding: 1em 1em 1em;
+}
+
+div#TaskListing {
+    background: #fafafa;
+    max-height: 800px;
+    height: 600px;
+    width: 95%;
+    
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    
+    line-height: 1.5;
     margin: 1em auto;
-    max-width: 2000px;
-    max-height: 2000px;
+    padding: 1em 1em 1em;
+    
+    overflow: scroll;
+}
+
+th {
+    color: #eee;
+    background: #333;
     padding: 1em 1em 1em;
 }
 
@@ -27,7 +42,6 @@ button {
 }
 
 input {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 16px;
     margin: 1 auto;
     padding: 1em 1em 1em;
@@ -37,36 +51,10 @@ input {
 #appname {
   font-size: 32px;
   text-align : center; 
-};
-
-thead {
-    background-color: aqua;
-    width: 100%;
-    text-align: left;
 }
 
-#TaskListing table {
-    border-collapse: collapse;
-    border: 2px solid black;
-    height: 100px;
-    overflow: scroll;
-    width: 100%;
-}
-
-th {
-    background: #333;
-    color: white;    
-    padding: 1em 1em 1em;
-    text-align: left;
-}
-
-td {
-    border: 0px solid black;
-    color: black;
-    padding: 1em 1em 1em;
-    #text-align: center;
-}
-
+/* This seems to make a difference even though no properties are specified. Without this, seems the gray scalling isn't as pronounced */
+td {}
 
 tr:nth-child(even) {
   background-color: gainsboro;
@@ -83,38 +71,17 @@ tr:nth-child(odd) {
     display:inline-block;
 }
 
-div#TaskListing {
-    background: white;
-    
-    #box-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
-    max-height: 800px;
-    height: 600px;
-    width: 100%;
-    max-width: 4000px;
-    color: white;
-    font-size: 16px;
-    line-height: 1.5;
-    margin: 1em auto;
-    padding: 1em 1em 1em;
-    overflow: scroll;
-}
-
-
 /* LEARN:BLINK This is how you would make a button text blink */
-
 @keyframes blink {
-    to { color:purple }
-    
+    to { color:red}
 }
 
 #CreateNew {
-    color:blue;
+    color:black;
     animation: blink 1s steps(2,start) infinite;
 }
+/* end of blink */
 
-.highlighted {
-    background-color: red;
-}
 
 #Begin {
     width: 2%;
@@ -126,17 +93,14 @@ div#TaskListing {
 
 #Unique {
     width: 2%;
-    
 }
 
 #Cat {
     width: 15%;
-    #border: 1px solid black;
 }
 
 #Title {
     width: 55%;
-    #border: 1px solid black;
 }
 
 /* Elapsed Time */
@@ -144,10 +108,11 @@ div#TaskListing {
     width: 10%;
 }
 
-#Trash {
+#Percent {
     width: 5%;
 }
 
-
-/* end of blink */
+#Trash {
+    width: 5%;
+}
 

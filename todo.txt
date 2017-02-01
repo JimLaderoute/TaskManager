@@ -27,6 +27,21 @@ o Made Title and Category editable in-place via contenteditable='true' setting
   <td id=Title contenteditable='true'> textual content </td>
 o Double-clicking on Elapsed data clears the timer back to 0 seconds - but really want to edit the time for the day.
 
+1/30/2017
+
+o Added a Percentage column ; to see what percent of your time you spent today
+
+1/31/2017
+
+o We enable the [Delete] button only if an item or two is having it's elapsed time updated. If nothing
+  is selected then no need to have the Delete button enabled.
+o Today I submitted a question to Stackoverflow.com to find out how to get at each <td> value of 
+  each row in a foreach loop given the <tr> object.
+
+2/1/2017
+
+o Cleaned up the CSS statements by removing things that were not required and accepting the Browser defaults.
+
 
 FUTURE TO DOS
 
@@ -37,7 +52,7 @@ o I'm currently using <table> object for the info. I believe there is a nicer TA
 o Allow more than one person at a time to use this ( username based )
 o Setup Beagle-bone Server - install html/css/javascript webpage here
   o setup apache server to host the webpages  (?)
-
+o Learn how to run regression tests on this - Node.js ; nodeunit ; Mocha ; Vows ; Zombie ...
 
 Maybe set priorities of these tasks?
 
