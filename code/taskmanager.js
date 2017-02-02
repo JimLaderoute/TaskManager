@@ -95,17 +95,60 @@ $("document").ready(function () {
         ** in case the user closes the web-application and wants to pick up from where he/she left off. 
         **
         */
+        var dataStore = [];
         
         $("#TaskListing table tr").each(function (index, element) {
             
             /*
             ** Get each field of the task and stuff it into an array (JSON format) that we will then save
             */
+            elapsed = $(this).data("millisecs"); 
             
-            // request.post( "your/server/script", { data: jasonData, timeout: 2000 }).then(function(response){ // do something on success})
+            // store each td for each iterated rows
+            var tds = $( this ).find( 'td' );
+            // .eq(1) is a zero-based, then start with 1 for column no 2
+            if ( tds.eq(1).text() == "" ) {
+                return true; // this is how to continue to next item in the .each loop
+            }
+            
+            var idClmn = tds.eq(1); // id column
+            var catClmn = tds.eq(2);  // category column
+            var titClmn = tds.eq(3);  // title column
+            var obj = {};
 
-            // jQuery.post("address", "Blah!", function (data) { alert(data); }) }
-            console.log( element.nodeName );
+            // getting text
+            console.log( idClmn.text(), catClmn.text(), titClmn.text() );
+
+            // here continue populate data into object or else
+            obj.idnum = idClmn.text();
+            obj.category = catClmn.text();
+            obj.title = titClmn.text();
+            obj.elapsed = elapsed;
+            
+            // push onto 
+            dataStore.push( obj );
+            
+  
+        });
+        
+        //console.log( dataStore );
+        console.log( JSON.stringify(dataStore));
+
+        // request.post( "your/server/script", { data: jasonData, timeout: 2000 }).then(function(response){ // do something on success})
+
+     //   jQuery.post("taskmanager.php", JSON.stringify(dataStore), function (returnData) { alert(returnData); });
+        $.ajax({
+            url : "taskmanager.php" ,
+            type : 'POST',
+            data : JSON.stringify(dataStore),
+            success : function(res) {
+                    // Successfully sent data
+                  console.log(res);
+            },
+            error: function(err) {
+                // Unable to send data
+                  console.log(err);
+            }
         });
         
     }
