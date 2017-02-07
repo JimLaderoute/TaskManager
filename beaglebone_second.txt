@@ -1,0 +1,51 @@
+Steps you have to take to use your already setup beaglebone webserver that already 
+has taskmanager installed into it's  /var/www/ area.
+
+
+o Power on the Beaglebone black - via micro-usb
+o Bring up Chrome on your windows system and enter url
+  http://192.168.7.2/taskmanager.html
+o Try creating a new category/task row. Put some elapsed time on it.
+o Try a Refresh of your browser, you should see the new category/task
+
+
+>> First refresh appears to work, but the ID number is 31. I had
+   expected it would be 4, not 31. That is odd.
+
+o Try a 2nd refresh, without doing anything in between
+
+>> The new category that I had created vanished
+
+
+o Turned on Chrome debugger and will try same two steps again
+  This gets 31 for the id number; the output to console looks ok. I 
+  see the new item  "31 CAT4 TASK4" and 'done 267' being returned.
+
+o 2nd refresh with debugger on.
+  <br>done 267<br> is returned. CAT4 shows up with number 31.
+
+o 3rd refresh with debugger on.
+  still there
+
+o 4th refresh with debugger on
+  still there
+
+o Created another task, got id 311 ???
+  <br>done 333</br> getting returned
+
+o Stopped timer and another refresh, ANOTHER AND ANOTHER
+  Seems we loose CAT4 and CAT5 which I had added.
+  <br>done 202</br>
+
+o Adding elapsed to "Title 3" ; 0:0.44  (will this stay around??)
+o Refresh ,Refresh , ...  seems to stay around
+
+o I'm going to log into the server and see if I can figure this out
+  [11pm 2/4/2017]
+
+# cd /var/www/
+
+  I see Title 3 with elapsed:44000 , so looks ok. Date is Nov 12th 19:11 which is very odd. Maybe I never set the beaglebone clock??
+
+  Maybe I'm writting while reading.... I need to investigate this!!!!
+

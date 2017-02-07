@@ -1,0 +1,1 @@
+copy /Y E:\JamesLaderoute\MySoftware\WebApp\TaskManager\code\* E:\JamesLaderoute\Applications3rdParty\wamp64\www\TaskManager\

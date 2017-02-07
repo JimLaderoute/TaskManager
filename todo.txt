@@ -43,16 +43,19 @@ o Today I submitted a question to Stackoverflow.com to find out how to get at ea
 o Cleaned up the CSS statements by removing things that were not required and accepting the Browser defaults.
 o Saving changes out to a JSON file under WAMP server
 
+2/5/2017
+
+o Setup Beagle-bone as a web server and able to run TaskManager from it now.
+o Debugged some asynchronous issue and a couple other coding bugs
+
+
 FUTURE TO DOS
 
-o Read tasks from a JSON file (or database) --- currently including taskmanager.json file into the html
 o Modify Existing Tasks (edit category, title, add/subtract hours or minutes from elapsed time)
 o I'm currently using <table> object for the info. I believe there is a nicer TABLE .js package out there that I could use. Probably would allow sorting of columns and resizing of columns. https://datatables.net/
 o Allow more than one person at a time to use this ( username based )
-o Setup Beagle-bone Server - install html/css/javascript webpage here
-  o setup apache server to host the webpages  (?)
 o Learn how to run regression tests on this - Node.js ; nodeunit ; Mocha ; Vows ; Zombie ...
+o Learn about AngularJS and incorporate learnings into this application
 
-Maybe set priorities of these tasks?
 
 

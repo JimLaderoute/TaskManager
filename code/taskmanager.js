@@ -3,7 +3,9 @@
 $("document").ready(function () {
  
     var highestNumber = 1, timePeriod = 1000, timerVar = setTimeout(timeoutCallback, timePeriod);
-    
+    var globalEnableSave = false;
+    var globalForceSaveData = false;
+
     function convertToMillisec(hr_min_sec) {
         var timearr = hr_min_sec.split(":"), ms = 0;
         
@@ -35,6 +37,12 @@ $("document").ready(function () {
     function timeoutCallback() {
         
         var timeChunk = timePeriod, nChecked = 0, totalTimeMs = 0;
+        console.log("HighestNumber is " + highestNumber);
+        
+        if ( globalForceSaveData == true ) {
+            saveTaskData();
+            globalForceSaveData = false;
+        }
         
         // First we traverse to find out how many toggle buttons are ON
         $("#TaskListing table tr td#Begin input").each(function (index, element) {
@@ -97,6 +105,10 @@ $("document").ready(function () {
         */
         var dataStore = [];
         
+        if ( globalEnableSave == false ) {
+            return;
+        }
+        
         $("#TaskListing table tr").each(function (index, element) {
             
             /*
@@ -117,7 +129,7 @@ $("document").ready(function () {
             var obj = {};
 
             // getting text
-            console.log( idClmn.text(), catClmn.text(), titClmn.text() );
+            //console.log( idClmn.text(), catClmn.text(), titClmn.text() );
 
             // here continue populate data into object or else
             obj.idnum = idClmn.text();
@@ -131,12 +143,7 @@ $("document").ready(function () {
   
         });
         
-        //console.log( dataStore );
-        console.log( JSON.stringify(dataStore));
-
-        // request.post( "your/server/script", { data: jasonData, timeout: 2000 }).then(function(response){ // do something on success})
-
-     //   jQuery.post("taskmanager.php", JSON.stringify(dataStore), function (returnData) { alert(returnData); });
+       // console.log( JSON.stringify(dataStore));
         $.ajax({
             url : "taskmanager.php" ,
             type : 'POST',
@@ -176,11 +183,12 @@ $("document").ready(function () {
         ** Now update the percentage column with the new value
         */
         $("#TaskListing table tr td#Begin input").each(function (index, element) {           
-          var theRow = $(element).parent().parent();
-          var thePercent = $(theRow).children("tr td#Percent:first");
+            var theRow = $(element).parent().parent();
+            var thePercent = $(theRow).children("tr td#Percent:first");
               currentvalue = $(theRow).data("millisecs");
               fnumber = currentvalue / totalTimeMs;
-          thePercent.text( 100 * fnumber.toFixed(2));
+            thePercent.text( (100 * fnumber).toFixed(2));
+            
 
         });
         
@@ -203,12 +211,15 @@ $("document").ready(function () {
             ischecked = "checked";
         }
         
+        //console.log("calling addNewRow with param idnum=" + idnum );
+        
         /*
         ** Every task item has a unique number associated with it.
         ** It's just the highest id number to date plus 1
         */
         if (idnum > highestNumber) {
             highestNumber = idnum;
+            console.log( "addNewRow Line 213: idnum is " + idnum)
         }
         
         var timeStr = millisecToHrMinSec(elapsed);  // create a hh:mm:ss string from the elapsed milliseconds
@@ -236,9 +247,9 @@ $("document").ready(function () {
             // input.td.tr 
            $(this).parent().parent().fadeOut(function () {
                 $(this).remove();
+               globalForceSaveData = true; // next refresh will save the data
             }); // removes the row when user clicks on the trashcan
             
-            saveTaskData(); // removing a taskitem is a change that requires that we save the data
         });
         
         
@@ -246,29 +257,26 @@ $("document").ready(function () {
 
 
     function newTask(evt) {
-        /* get the strings from the Category and Title input text widgets - TBD */
-        
         var catstr = $("#CategoryInput").val();
         var titlestr = $("#TitleInput").val();
         /* Now add a new task to the table */
-        addNewRow(true, (highestNumber + 1), catstr, titlestr, 0);
+        addNewRow(true, ( parseInt(highestNumber,10) + 1), catstr, titlestr, 0);
     }
        
     function removeTasks(evt) {
         /* Find all tasks that are checked-on and delete them */
-        //var c = confirm('Continue with delete?');
-        var nRemoved = 0;
-
+       
+        // count up how many checkboxes are checked
+        var nRemoved = $('input:checkbox:checked').length;
+        if ( nRemoved > 0 ) {
+            globalForceSaveData = true;
+        }
+        
+        // This fadeOut happens asynchronously
         jQuery('input:checkbox:checked').parents("tr").fadeOut(function () {
-            var $this = $(this);
-            nRemoved = nRemoved + 1;
-            $this.remove();
+            $(this).remove();
         });
 
-        if ( nRemoved > 0 ) {
-            saveTaskData();
-        }
-  
         /*
         ** Disable the Delete button - we only re-enable it when a task's elapsed time is changing
         */
@@ -280,23 +288,20 @@ $("document").ready(function () {
     ** Read the JSON data and display it
     */
     function populate() {
-        //obj = JSON.parse(data);
+        globalEnableSave = false;
         var obj = data;
         for (var i=0; i < obj.length; i++) {
             addNewRow( false, obj[i].idnum, obj[i].category , obj[i].title, obj[i].elapsed );
         }
+        
+        globalEnableSave = true;
     }
 
     populate();
     
     $("#CreateNew").on('click', newTask );      
     $("#RemoveSel").on('click', removeTasks );
-    
- //   $("input[type=button,name=delete]").click(function(){
-  //      $("input[type=button,name=delete]").attr('disabled','disabled');
-   // });
-    
-    
+ 
 });
 
 /*
@@ -312,7 +317,7 @@ function editElapsedTime ( idnum ) {
 
     $("#TaskListing table tr td#Unique").each(function (index, element) {
         
-        console.log( "editElapsedTime " + idnum );
+        //console.log( "editElapsedTime " + idnum );
         
         if (element.textContent == idnum) {
             var lastvalue = $(element).parent().data("millisecs");

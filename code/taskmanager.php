@@ -2,9 +2,13 @@
 
     $contents = file_get_contents('php://input');
     $data = json_decode( $contents );
+	$filename = "taskdata.json";
 
-    file_put_contents( "taskdata.json",  "data=".$contents );
-
-    echo "<br>done</br>";
+    $nbytes = file_put_contents( $filename,  "data=".$contents );
+    if ( $nbytes === FALSE ) {
+		echo "<br>Failed to update $filename file</br>";
+	} else {
+		echo "<br>Wrote $nbytes bytes to $filename</br>";
+	}
 
 ?>

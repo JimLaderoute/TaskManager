@@ -1,0 +1,108 @@
+Steps Taken with BeagleBone in order to run TaskManager on it.
+
+o Connect to your computer with Micro-Usb cable
+  NOTE: When you do this it creates 'Local Area connection 2' in my Network Connections.
+        Connect using: Linux USB Ethernet/RNDIS Gadget using ip address 192.168.137.1
+o Log in with Putty; 192.168.7.2  Port: 22 using SSH
+o login as: root  
+o password: blank (no password)
+
+o You want to now make sure your beaglebone can use your windows computer to connect to the internet
+
+  How to forward Internet from your Windows 7 system thru the USB system On Windows 
+
+  * Control Panel->Network and Internet->Network Connections
+    Control Panel\Network and Internet\Network Connections
+  * Wireless Network Connection : Properties
+  * Goto <Sharing> Tab 
+    [x] Allow other network users to connect thru this computer's Internet connection
+    Home networking connection:  Local Area Connection 2
+  * Goto <Networking> Tab
+    Select Internet Protocol Version 4 (TCP/IPv4) and select [Properties] button
+    Use following IP address: 192.168.7.1
+                  Submet mask: 255.255.255.0
+  * Back on your beaglebone enter these
+    # echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+    # ifconfig usb0 192.168.7.2
+    # /sbin/route add default gw 192.168.7.1
+    # ping www.google.com  << this should be working now
+    # sudo apt-get update  << updating stuff
+  
+
+
+
+o Turn BeagleBone into a web server
+  see: https://www.element14.com/community/community/designcenter/single-board-computers/next-gen_beaglebone/blog/2013/11/20/beaglebone-web-server--setup  (but if you have debian installed you have to use apt-get instead of opkg )
+
+  https://www.youtube.com/watch?v=Vm-y-1HZSPo  -- for debian installation
+
+  Disable some of the services (will need them for webserver)
+
+  # sudo systemctl disable cloud9.service
+  # sudo systemctl disable gateone.service
+  # sudo systemctl disable bonescript.service
+  # sudo systemctl disable bonescript.socket
+  # sudo systemctl disable bonscript-autorun.service
+  # sudo systemctl disable avahi-daemon.service
+  # sudo systemctl disable gdm.service
+  # sudo systemctl disable mpd.service
+  # sudo reboot
+
+  # sudo apt-get install lighttpd [--fix-missing]
+
+  NOTE: you can find the config for this in /etc/lightdm/
+        you can find logs in /var/log/lighttpd/error.log
+
+  Now place your web pages in  /var/www/ folder.
+ 
+  o To do that I installed "WinSCP" and copied the Win7 files to 192.168.7.2
+  o Now on windows type 192.168.7.2/taskmanager.html
+  o I got 403 Forbidden error when trying to run taskmanager.php 
+    POST http://192.168.7.2/taskmanager.php 403 (Forbidden)
+    Probably just a permission problem, figure out correct permissions.
+    chmod 755 taskmanager.php
+    
+    # sudo lighttpd-enable-mod fastcgi fastcgi-php  (note, already enabled on my beaglebone)
+
+    This caused problems - so I removed it.
+
+    # sudo lighttpd-disable-mod fastcgi 
+    # sudo lighttpd force-reload
+    # sudo lighttpd restart
+
+    I was able to view my taskmanager.html again :)  But still geting 403 (forbidden) on my php
+
+  o I installed php-5 on my beaglebone black
+    # sudo apt-get install php5-cgi
+
+  o To get php working with lighttpd you must modify /etc/php5/cgi/php.ini and uncomment
+    the line cgi.fix_pathinfo=1:
+
+    # vi /etc/php5/cgi/php.ini
+
+  o Then reload and restart lighttpd
+    # sudo /etc/init.d/lighttpd force-reload
+    # /etc/init.d/lighttpd restart
+
+  o Did the following to get php to work
+    # apt-get install php5 php5-cli
+    # sudo lighty-enable-mod fastcgi
+    # sudo lighty-enable-mod fastcgi-php
+    # /etc/init.d/lighttpd force-reload
+    # sudo service lighttpd force-reload
+    # cd /var/www/
+    # chmod 744 info.php
+    # chmod 744 taskmanager.php
+
+  o The php script now runs, but it's not creating (overwritting) the taskdata.json file
+    like it does for our WAMP server. ( 10:25pm 2/4/17 )
+    # chmod 646 taskdata.json   <== this fixed that problem, now it all works
+
+
+o in Beaglebone
+
+  # sudo apt-get update
+  # npm config set strict-ssl false
+  # sudo npm install i2c
+
+
