@@ -1,0 +1,8 @@
+b0:d5:cc:0f:e9:f0 - usb0 Beaglebone mac address
+
+b0:d5:cc:0f:e9:f1  eth0 Beaglebone mac address
+
+98:01:a7:95:59:DD  Dan's Macbook Pro
+
+NOTE:
+[WLAN access rejected: incorrect security] from MAC address 8c:cd:e8:03:f6:f6, Wednesday, February 08, 2017 18:13:40

@@ -1,0 +1,85 @@
+USING: TP-LINK 150Mbps Wireless N Nano USB Adapter 
+Model No: TL-WN725N
+
+
+You can setup wireless network stuff using command "wicd-curses"
+See: https://docs.google.com/document/d/1-CIGQYdk8ZhU3D3UCNn70jc7C9HdXvEZAsiNW71fGIE/edit#
+
+To connect to a WPA protected wireless network, first encrypt the WPA passphrase:
+# wpa_passphrase [SSID] [passphrase]
+> wpa_passphrase HOMELAN [passphrase]
+network={
+        ssid="HOMELAN"
+        #psk="passphrase"
+        psk=6249ea03b21eb70296c05089052b4930733b7aac174c6330631f346406fbb51d
+}
+
+
+Use nano to edit Connman config file:
+NOTE: connman is used with Angstrom distribution on Beaglebone, my device uses debian
+# nano /var/lib/connman/wifi.config
+
+and enter:
+[service_home]
+Type = wifi
+Name = YourSSID
+Passphrase = YourEncryptedPassphrase
+
+NOTE: do not put your SSID in quotes, even if it contains spaces
+
+
+# shutdown -r now
+# ifconfig ra0
+
+
+NOTE: the file that contains the usb0 ip-address information is in /etc/network/interfaces
+
+# nano /etc/network/interfaces
+
+auto wlan0
+iface wlan0 inet dhcp
+   wpa-ssid HOMELAN
+   wpa-psk danflowers123
+
+ifup wlan0
+ifconfig wlan0
+ping router-ip-here
+ping google.com
+
+
+The following URL mentions somthing extra in the /etc/network/interfaces file that should be added
+    https://raspberrypi4dummies.wordpress.com/tag/wpa_supplicant-sbinwpa_supplicant-daemon-failed-to-start/
+
+auto wlan0
+allow-hotplug wlan0
+iface wlan0 inet dhcp
+   wpa-ssid HOMELAN
+   wpa-psk danflowers123
+
+ctrl-x and Y to save changes
+Now just restart your network connections
+
+sudo /etc/init.d/networking restart
+or reboot with sudo reboot
+
+=============================
+On another website: forums.debian.net they said for wpa-psk to use the encrypted
+string and not the plain text string. So, I tried that.
+http://forums.debian.net/viewtopic.php?f=5&t=128451
+
+=============================
+And on another site, they didn't use the encrypted value, they used the plain-text
+value. Arghhh...  Switching back to plain-text password and also putting double
+quotes around it as shown in some other examples.
+
+# nano /etc/network/interfaces
+
+auto wlan0
+allow-hotplug wlan0
+iface wlan0 inet dhcp
+   wpa-ssid HOMELAN
+   wpa-psk danflowers123
+
+#sudo /etc/init.d/networking restart
+
+NOTE: I'm starting to think that my BBB just does not support my USB Wifi device.

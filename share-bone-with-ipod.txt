@@ -1,0 +1,98 @@
+With Beaglebone connected to Desktop via USB connection; I wanted my ipod touch to connect to the
+webserver 192.168.7.2/taskmanager.html 
+
+Steps Taken:
+
+1. Router ; port-forward HTTP :80 to DESKTOP 192.168.1.10  (thinking I need to then port desktop to beagle)
+2. Desktop ; allow HTTP requests to get thru (firewall cancel blocking)
+3. Desktop Win7; Wireless Network Connection properties
+   [x] Allow other network users to control or disable the shared Internet
+   ADVANCE SETTINGS: Select service running on netowrk that Internet can access
+   [x] Web Server (HTTP)
+4: on Ipod-touch , Safari 192.168.7.2/taskmanager.html   (DID NOT WORK)
+
+
+http://woshub.com/port-forwarding-in-windows/
+
+CMD.EXE:
+  netstat -ano | findstr :80
+
+C:\Users\KIRK>netstat -ano | findstr :80
+(when using default rules)
+  TCP    127.0.0.1:8076         0.0.0.0:0              LISTENING       7836
+
+5. Try to do port forwarding on windows using Admin Command Prompt
+   netsh interface portproxy add v4tov4 listenport=80 listenaddress=192.168.1.18 connectport=80 connectaddress=192.168.7.2
+   netsh interface portproxy add v4tov4 listenport=80 listenaddress=192.168.1.10 connectport=80 connectaddress=192.168.7.2
+
+   netstat -ano | findstr :80
+   ----------------------------------------------------------------------------
+   TCP    127.0.0.1:8076         0.0.0.0:0              LISTENING       7836
+   TCP    192.168.1.10:80        0.0.0.0:0              LISTENING       1016
+
+   tasklist | findstr 1016
+   -----------------------------------------------------------------------------
+   svchost.exe   1016 Services   0 48,748K
+
+6. https://answers.microsoft.com/en-us/windows/forum/windows_7-networking/how-to-enable-ip-routing-in-windows-7/8970e722-e947-460d-80d5-fd6ffc850f3f
+   
+    Go to Start and search on cmd or command. Right click on either cmd or command then select Run as administrator. At the command prompt type regedit. Navigate to the HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\ Services\Tcpip\Parameters\IPEnableRouter setting, right click and select Modify. Change 0 to 1 and exit the editor. When your back at the command prompt type services.msc and navigate to the Routing and Remote Access service. Right click and select Properties. Change to Automatic and click on Start to start the service.
+
+7. You can see your route tables this way:
+   cmd.exe(as admin)> route print
+
+===========================================================================
+Interface List
+ 17...b0 d5 cc 0f e9 f3 ......Linux USB Ethernet/RNDIS Gadget
+ 16...68 14 01 b7 db df ......Microsoft Virtual WiFi Miniport Adapter
+ 12...68 14 01 b7 db df ......Broadcom BCM43142 802.11 bgn Wi-Fi Adapter
+ 11...dc 4a 3e 49 5c 09 ......Realtek PCIe GBE Family Controller
+  1...........................Software Loopback Interface 1
+ 18...00 00 00 00 00 00 00 e0 Microsoft ISATAP Adapter
+ 13...00 00 00 00 00 00 00 e0 Microsoft 6to4 Adapter
+ 35...00 00 00 00 00 00 00 e0 Microsoft ISATAP Adapter #2
+ 19...00 00 00 00 00 00 00 e0 Microsoft ISATAP Adapter #3
+ 20...00 00 00 00 00 00 00 e0 Microsoft ISATAP Adapter #4
+===========================================================================
+
+IPv4 Route Table
+===========================================================================
+Active Routes:
+Network Destination        Netmask          Gateway       Interface  Metric
+          0.0.0.0          0.0.0.0      192.168.1.1     192.168.1.10     25
+        127.0.0.0        255.0.0.0         On-link         127.0.0.1    306
+        127.0.0.1  255.255.255.255         On-link         127.0.0.1    306
+  127.255.255.255  255.255.255.255         On-link         127.0.0.1    306
+      192.168.1.0    255.255.255.0         On-link      192.168.1.10    281
+     192.168.1.10  255.255.255.255         On-link      192.168.1.10    281
+    192.168.1.255  255.255.255.255         On-link      192.168.1.10    281
+      192.168.7.0  255.255.255.252         On-link       192.168.7.1    266
+      192.168.7.1  255.255.255.255         On-link       192.168.7.1    266
+      192.168.7.3  255.255.255.255         On-link       192.168.7.1    266
+        224.0.0.0        240.0.0.0         On-link         127.0.0.1    306
+        224.0.0.0        240.0.0.0         On-link      192.168.1.10    281
+        224.0.0.0        240.0.0.0         On-link       192.168.7.1    266
+  255.255.255.255  255.255.255.255         On-link         127.0.0.1    306
+  255.255.255.255  255.255.255.255         On-link      192.168.1.10    281
+  255.255.255.255  255.255.255.255         On-link       192.168.7.1    266
+===========================================================================
+Persistent Routes:
+  None
+
+IPv6 Route Table
+===========================================================================
+Active Routes:
+ If Metric Network Destination      Gateway
+  1    306 ::1/128                  On-link
+ 12    281 fe80::/64                On-link
+ 17    266 fe80::/64                On-link
+ 12    281 fe80::1193:a2c6:1e53:56ad/128
+                                    On-link
+ 17    266 fe80::cc96:3c1d:922b:3450/128
+                                    On-link
+  1    306 ff00::/8                 On-link
+ 12    281 ff00::/8                 On-link
+ 17    266 ff00::/8                 On-link
+===========================================================================
+Persistent Routes:
+  None

@@ -49,3 +49,5 @@ o I'm going to log into the server and see if I can figure this out
 
   Maybe I'm writting while reading.... I need to investigate this!!!!
 
+o Resolved code problems.... works great now
+

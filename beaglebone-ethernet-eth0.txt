@@ -1,0 +1,21 @@
+2/8/2017 11:43pm
+
+1. Hook up your ethernet cable to the BBB and powerup with 5V power-supply port
+2. The BBB webserver will now respond to 192.168.1.80
+3. You can Putty/SSH into BBB via 192.168.1.80
+4. You can start the VNC SERVER on your BBB and then from any computer
+   on your network use VNC Server: 192.168.1.80:5901 to connect
+5. Run taskmanager.html from any connected computer
+   URL: 192.168.1.80/taskmanager.html
+6. Set the correct time on your BBB from Putty or VNC xterm
+   # ntpdate -b -s -u pool.ntp.org
+
+How to debug taskmanager.html
+-------------------------------
+o  Look at /var/log/lighttpd/error.log
+
+How to restart the web server
+----------------------------
+o Putty into BBB as root
+  # /etc/init.d/lighttpd restart
+
