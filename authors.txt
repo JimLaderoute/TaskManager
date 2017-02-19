@@ -3,3 +3,5 @@ In Alphabetical Order
 Judge, Ned	  [Tester and idea man]
 Laderoute, Dan    [Graphic Designer]
 Laderoute, James  [Master coder]
+Dave Gauthier [Database Consultant]
+
