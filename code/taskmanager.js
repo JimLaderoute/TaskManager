@@ -40,7 +40,7 @@ $("document").ready(function () {
         console.log("HighestNumber is " + highestNumber);
         
         if ( globalForceSaveData == true ) {
-            saveTaskData();
+            saveTaskData( 'jimladeroute', todaysDate() );
             globalForceSaveData = false;
         }
         
@@ -52,12 +52,11 @@ $("document").ready(function () {
             
             var theRow = $(element).parent().parent();              // get the parent row of the checkbox
             var currentvalue = $(theRow).data("millisecs");         // get last stored millisec elapsed time
-            totalTimeMs = totalTimeMs + currentvalue ;              // keep track of the total millisecs for all tasks
+            totalTimeMs = parseInt(totalTimeMs) + parseInt(currentvalue) ;  // keep track of the total millisecs for all tasks
         });
         
         if (nChecked > 1) {
-            timeChunk = timePeriod / nChecked ;
-            
+            timeChunk = timePeriod / nChecked ;            
         } 
         
         if ( nChecked > 0 ) {
@@ -77,7 +76,7 @@ $("document").ready(function () {
                 
                 var theRow = $(element).parent().parent();              // get the parent row <tr> of the checkbox-input
                 var currentvalue = $(theRow).data("millisecs");         // get last stored millisec elapsed time
-                var newvalue = currentvalue + timeChunk;                // add in the time chunk to get new elapsed time
+                var newvalue = parseInt(currentvalue) + timeChunk;                // add in the time chunk to get new elapsed time
                 $(theRow).data("millisecs", newvalue);                  // save back on the object as data to the row
                 $(theRow).data("changedSinceLastSave", 1);              // marks this row as changed (ie. updated)
                 
@@ -92,8 +91,49 @@ $("document").ready(function () {
         timerVar = setTimeout(timeoutCallback, timePeriod); // Restart the timer for the next N seconds 
     }
     
+    /*
+    ** loadTaskData( userName , searchDay )
+    **
+    ** This calls the server script to access and return all the rows of
+    ** the taskdata owned by username 'forThisUser' and list elapsed time that happened
+    ** on 'onThisDay' date.
+    */
+    
+    function loadTaskData( forThisUser, onThisDay ) {
+ 
+        $.ajax({
+            url : "taskmanagerGetTasks.php" ,     // server side script
+            type : 'GET',                        // NOTE:  type: is an alias for method:  -- you must use method: prior to jQuery 1.9.0
+            cache: false, 
+            data : {'whichUser' : forThisUser, 'whichDay': onThisDay },
+            dataType : 'json',                   // NOTE:  dataType: is the type of data that you're expecting back from the server
+            success : function(json) {
+                // Successfully got data
+                console.log(json);
+                $.each(json, function(i, item) {
+                    if(typeof item == 'object') {
+                        // taskid category  title elapsed(ms) 
+                        addNewRow( false, item['taskid'], item['category'], item['title'], item['elapsed'] );
+                    }
+                    else {
+                        return false;
+                    }
+                }) // end $.each() loop
+            },
+            
+            
+            error: function(err) {
+                // Unable to send data
+                  console.log(err);
+                  // pop up an HTML error window or write to error area jimbo
+                
+                $('#feedback').html("<b>Error calling the php function</b><br>RESPONSE: " + err.responseText + "<br>STATUS: " + err.status + "<br>statusText: " + err.statusText    );
+                
+            }
+        });  // end of $.ajax
+    } // end of getTaskData()
 
-    function saveTaskData() {
+    function saveTaskData( forThisUser, onThisDay ) {
         /*
         ** currently (as of 1/30/2017) the html file includes taskmanager.json file that represents the tasks
         ** and the state of each task (such as elapsed time) for today.
@@ -108,6 +148,10 @@ $("document").ready(function () {
         if ( globalEnableSave == false ) {
             return;
         }
+        
+        /*
+        ** Build up the dataStore array with current data in the table
+        */
         
         $("#TaskListing table tr").each(function (index, element) {
             
@@ -145,9 +189,10 @@ $("document").ready(function () {
         
        // console.log( JSON.stringify(dataStore));
         $.ajax({
-            url : "taskmanager.php" ,
+            url : "taskmanagerSaveTasks.php" ,
             type : 'POST',
-            data : JSON.stringify(dataStore),
+            cache: false,
+            data : {'whichUser' : forThisUser, 'whichDay': onThisDay, 'jsonData' : JSON.stringify(dataStore)  },
             success : function(res) {
                     // Successfully sent data
                   console.log(res);
@@ -176,7 +221,7 @@ $("document").ready(function () {
            currentvalue = $(theRow).data("millisecs");         // get last stored millisec elapsed time
            changes = changes + $(theRow).data("changedSinceLastSave");      // any change made since last save operation
            $(theRow).data( "changedSinceLastSave", 0);                      // clear change counter
-           totalTimeMs = totalTimeMs + currentvalue ;          // add to total elapsed time (so we can figure percent per task)
+           totalTimeMs = totalTimeMs + parseInt(currentvalue) ;   // add to total elapsed time (so we can figure percent per task)
         });
 
         /*
@@ -186,7 +231,7 @@ $("document").ready(function () {
             var theRow = $(element).parent().parent();
             var thePercent = $(theRow).children("tr td#Percent:first");
               currentvalue = $(theRow).data("millisecs");
-              fnumber = currentvalue / totalTimeMs;
+              fnumber = parseInt(currentvalue) / totalTimeMs;
             thePercent.text( (100 * fnumber).toFixed(2));
             
 
@@ -197,7 +242,7 @@ $("document").ready(function () {
         */
         
         if ( changes > 0 ) {
-            saveTaskData();
+            saveTaskData( 'jimladeroute' );
         }
     }
 
@@ -283,16 +328,42 @@ $("document").ready(function () {
         $("input[name=delete]").attr('disabled','disabled');
 
     }
+    
+    /*
+    **  Return's todays date in the format expected by the MySQL database.
+    **  YYYY-MM-DD
+    */
+    function todaysDate() {
+        var today = new Date();  
+        var dd = today.getDate();  
+
+        var mm = today.getMonth()+1;   
+        var yyyy = today.getFullYear();  
+        if(dd<10)   
+        {  
+            dd='0'+dd;  
+        }   
+
+        if(mm<10)   
+        {  
+            mm='0'+mm;  
+        }
+        
+        return( yyyy+'-'+mm+'-'+dd );
+    }
 
     /*
     ** Read the JSON data and display it
     */
     function populate() {
         globalEnableSave = false;
-        var obj = data;
-        for (var i=0; i < obj.length; i++) {
-            addNewRow( false, obj[i].idnum, obj[i].category , obj[i].title, obj[i].elapsed );
-        }
+        
+        loadTaskData( "jimladeroute", todaysDate() ) ;
+        
+//        var obj = data;
+//        for (var i=0; i < obj.length; i++) {
+//            addNewRow( false, obj[i].idnum, obj[i].category , obj[i].title, obj[i].elapsed );
+//        }
         
         globalEnableSave = true;
     }
