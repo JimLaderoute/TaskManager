@@ -22,7 +22,7 @@
 	$filename = "taskdata.json.save.txt";
     $nbytes = file_put_contents( $filename,  "data=".$contents );
 
-    $host = "localhost";  // 127.0.0.1 port =  55394 asof 3/9/17
+    $host = "localhost";  // localhost; 127.0.0.1 port =  55394 asof 3/9/17
     $username = "my_user";
     $password = "my_password";
     $database = "taskmanager";
@@ -45,41 +45,37 @@
 
     $safeUser = mysqli_real_escape_string( $db, $whichUser) ;
     $safeDay  =  mysqli_real_escape_string( $db, $whichDay) ;
-
     $mystring = '';
+    $mystring = $mystring . "[$whichUser] , [$whichDay] \r\n";
+
+    $strSQL = "UPDATE elapsed, users, tasks SET elapsed.elapsed=? WHERE elapsed.day=? AND elapsed.taskid=? AND tasks.taskid=elapsed.taskid AND users.name=? AND users.userid=tasks.userid" ;
+    if ( !($stmt = $db->prepare( $strSQL ))) {
+        echo "Prepare failed: (" . $db->errno . ") " . $db->error ;
+        $mystring = $mystring . " Prepare failed "  . $db->errno . ") " . $db->error . "\r\n";
+    }
+
     foreach ( $data as $jsonObj ) {
         $taskid  =    $jsonObj->{'idnum'} ;
         $elapsedMS =  $jsonObj->{'elapsed'}; // in milliseconds
+        $catname =    $jsonObj->{'category'}; 
+        $title =   $jsonObj->{'title'};
+        
         $mystring = $mystring . "=================\r\n" ;
-       
-        $selStrSQL = <<<SQL1
-        SELECT * FROM elapsed AS e, tasks AS t, users AS u 
-        WHERE e.day='$safeDay' AND e.taskid=$taskid AND t.taskid=e.taskid
-              AND u.name='$safeUser' AND u.userid=t.userid ;
-SQL1;
-        
-/*        
-        $strSQL = <<<SQL
-        UPDATE elapsed, users, tasks
-           SET elapsed=$elapsedMS
-           WHERE elapsed.day='$safeDay' AND elapsed.taskid=$taskid AND tasks.taskid=elapsed.taskid
-                 AND users.name='$safeUser' AND users.userid=tasks.userid ;
-SQL;
-*/
-        
+        $mystring = $mystring . "UPDATE using $taskid, $catname, $title, elapsed=$elapsedMS \r\n" ;
 
-        $strSQL = "UPDATE elapsed, users, tasks SET elapsed=" . $elapsedMS . " WHERE elapsed.day='" . $safeDay ."' AND elapsed.taskid=" . $taskid . " AND tasks.taskid=elapsed.taskid AND users.name='" . $safeUser . "' AND users.userid=tasks.userid ;" ;
-        
-  //      $mystring = $mystring . $strSQL . "\r\n" ;
-
-        $result = $db->query( $strSQL );
-        if ( $result === false ) {
-            echo "Error updating record: " . $db->error ;
-            $mystring = $mystring . " error " . $db->error . "\r\n" ;  
-        } else {
-            echo "Record update successfully affected=" . $db->affected_rows . "\r\n";
-            $mystring = $mystring . " success affected=" . $db->affected_rows . "\r\n" ;
+        if ( !$stmt->bind_param( "isis", $elapsedMS,  $safeDay, $taskid, $safeUser ) ) {
+            echo "Binding parameters failed: (" . $stmt->errno . ") " . $stmt->error ;
+            $mystring = $mystring . " Binding parameters failed " . $stmt->errno . ") " . $stmt->error . "\r\n" ;
         }
+        
+        if ( !$stmt->execute()) {
+            echo "Execute failed: (" . $stmt->errno . ") " . $stmt->error ;
+            $mystring = $mystring . "execute failed " . $stmt->errno . ") " . $stmt->error . "\r\n";
+        }
+        
+       $mystring = $mystring . "  affected_rows=" . $db->affected_rows . "\r\n" ;
+        
+   
     }
 
 $nbytes = file_put_contents( "taskdata.sql.txt" , $mystring );

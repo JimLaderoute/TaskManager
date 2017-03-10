@@ -45,18 +45,32 @@
         echo "Prepare failed: (" . $db->errno . ") " . $db->error ;
     }
 
+    /* 
+    ** binding the question marks to actual values with data-types associated with them.
+    ** i = int,  d = double,  s = string, b = blob
+    ** NOTE: do NOT pass the variables by reference or you will get an error ; some resources say to pass by reference
+    */
     if ( !$stmt->bind_param("ss", $whichDay, $whichUser )) {
         echo "Binding parameters failed: (" . $stmt->errno . ") " . $stmt->error  ;
     }
 
+    /*
+    ** This runs the Query
+    */
     if ( !$stmt->execute()) {
         echo "Execute failed: (" . $stmt->errno . ") " . $stmt->error  ;
     }
 
+    /*
+    ** This gets the results from the Query
+    */
     if ( !($res = $stmt->get_result())) {
         echo "Getting result set failed: (" . $stmt->errno . ") " . $stmt->error  ;
     }
         
+    /*
+    ** And this processes the results, storing the info into an array to be passed to the client
+    */
     $data = array();
     for ($row_no = ($res->num_rows - 1); $row_no >= 0; $row_no--) {
         $res->data_seek($row_no);
@@ -66,6 +80,9 @@
     $res->close();
     $db->close();
 
+    /*
+    ** The client is expecting json encoded data
+    */
     echo json_encode( $data );
 
 /*
