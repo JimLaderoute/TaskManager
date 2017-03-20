@@ -83,36 +83,36 @@ tr:nth-child(odd) {
 /* end of blink */
 
 
-#Begin {
+.Begin {
     width: 2%;
 }
 
-#onoff {
+.onoff {
     zoom: 2.0;
 }
 
-#Unique {
+.Unique {
     width: 2%;
 }
 
-#Cat {
+.Cat {
     width: 15%;
 }
 
-#Title {
+.Title {
     width: 55%;
 }
 
 /* Elapsed Time */
-#Time {
+.Time {
     width: 10%;
 }
 
-#Percent {
+.Percent {
     width: 5%;
 }
 
-#Trash {
+.Trash {
     width: 5%;
 }
 

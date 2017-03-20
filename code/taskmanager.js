@@ -6,6 +6,10 @@ $("document").ready(function () {
     var globalEnableSave = false;
     var globalForceSaveData = false;
 
+    
+    
+
+    
     function convertToMillisec(hr_min_sec) {
         var timearr = hr_min_sec.split(":"), ms = 0;
         
@@ -83,6 +87,8 @@ $("document").ready(function () {
                 var theTimer = $(theRow).children("tr td#Time:first");  // get the Time data field and update
                 theTimer.text(millisecToHrMinSec(newvalue));
                 
+                globalForceSaveData = true;
+                
             }
         });
         
@@ -113,7 +119,7 @@ $("document").ready(function () {
                 $.each(json, function(i, item) {
                     if(typeof item == 'object') {
                         // taskid category  title elapsed(ms) 
-                        addNewRow( false, item['taskid'], item['category'], item['title'], item['elapsed'] );
+                        addNewRow( false, item['taskid'], item['category'], item['title'], item['milliseconds'] );
                     }
                     else {
                         return false;
@@ -179,7 +185,7 @@ $("document").ready(function () {
             obj.idnum = idClmn.text();
             obj.category = catClmn.text();
             obj.title = titClmn.text();
-            obj.elapsed = elapsed;
+            obj.milliseconds = elapsed;
             
             // push onto 
             dataStore.push( obj );
@@ -196,10 +202,13 @@ $("document").ready(function () {
             success : function(res) {
                     // Successfully sent data
                   console.log(res);
+                var secs = new Date().getTime();
+                $('#feedback').html("<b>success calling taskmanagerSaveTasks.php</b><br>RESPONSE: " + secs + " : " + res   );
             },
             error: function(err) {
                 // Unable to send data
                   console.log(err);
+                  $('#feedback').html("<b>Error calling taskmanagerSaveTasks.php</b><br>RESPONSE: " + err.responseText + "<br>STATUS: " + err.status + "<br>statusText: " + err.statusText    );
             }
         });
         
@@ -242,7 +251,7 @@ $("document").ready(function () {
         */
         
         if ( changes > 0 ) {
-            saveTaskData( 'jimladeroute' );
+            saveTaskData( 'jimladeroute', todaysDate() );
         }
     }
 
@@ -271,17 +280,22 @@ $("document").ready(function () {
 
         var tableObj = $("#TaskListing table").append(
             "<tr class=rows id=TaskId>" +
-              "<td id=Begin><input id=onoff type=checkbox " + ischecked + "></td>" +
-              "<td id=Unique>" + idnum + "</td>" +
-              "<td id=Cat contenteditable='true'>" + catstr + "</td>" +
-              "<td id=Title contenteditable='true'>" + titlestr + "</td>" +
-              "<td id=Time ondblclick=\"editElapsedTime(" + idnum + ")\">" + timeStr + "</td>" +
-              "<td id=Percent>0</td>" +
-              "<td id=Trash><input name=TrashInput" + idnum + " type=image src=trashcan.jpg height=30 width=30 /></td>" +
+              "<td class=Begin id=Begin><input class=onoff id=onoff" + idnum + " type=checkbox " + ischecked + "></td>" +
+              "<td class=Unique id=Unique>" + idnum + "</td>" +
+              "<td class=Cat id=Cat contenteditable='true'>" + catstr + "</td>" +
+              "<td class=Title id=Title contenteditable='true'>" + titlestr + "</td>" +
+              "<td class=Time id=Time ondblclick=\"editElapsedTime(" + idnum + ")\">" + timeStr + "</td>" +
+              "<td class=Percent id=Percent>0</td>" +
+              "<td class=Trash id=Trash><input name=TrashInput" + idnum + " type=image src=trashcan.jpg height=30 width=30 /></td>" +
             "</tr>"
         );
+        
          
         storeElapsed( idnum, elapsed ); // store the elapsed time in millisecond units for accuracy
+        
+        if ( startTimer ) {
+            insertRecordIntoDatabase( 'jimladeroute', idnum, catstr, titlestr, elapsed );
+        }
         
         if ( elapsed > 0 ) {
             refreshPercent(); // and since we have added a new task, the percentages might be different , so update
@@ -291,19 +305,69 @@ $("document").ready(function () {
         $("input[name=TrashInput" + idnum + "]").click(function (ev) {
             // input.td.tr 
            $(this).parent().parent().fadeOut(function () {
+                removeRecordFromDatabase( idnum ); // this removes the item from the database
                 $(this).remove();
-               globalForceSaveData = true; // next refresh will save the data
+// should not need to do this anylonger=>               globalForceSaveData = true; // next refresh will save the data
             }); // removes the row when user clicks on the trashcan
             
         });
         
+
+        
         
     }
+    
+    function removeRecordFromDatabase( taskid ) {
+        $.ajax({
+            url : "taskmanagerDeleteTask.php" ,     // server side script
+            type : 'POST',                        // NOTE:  type: is an alias for method:  -- you must use method: prior to jQuery 1.9.0
+            cache: false, 
+            data : {  'taskid' : taskid },
+            success : function(res) {
+                // Successfully got data
+                $('#feedback').html( res );
+                console.log(res);
+
+            },     
+            error: function(err) {
+                // Unable to send data
+                console.log(err);
+                $('#feedback').html("<b>Error calling taskmanagerDeleteTask</b><br>RESPONSE: " + err.responseText + "<br>STATUS: " + err.status + "<br>statusText: " + err.statusText    );
+            }
+        });  // end of $.ajax  
+        
+    }
+    function insertRecordIntoDatabase( userName, newTaskid , newCat, newTitle, newElapsed ) {
+
+        onThisDay = todaysDate() ;
+
+        $.ajax({
+            url : "taskmanagerNewTask.php" ,     // server side script
+            type : 'POST',                        // NOTE:  type: is an alias for method:  -- you must use method: prior to jQuery 1.9.0
+            cache: false, 
+            data : { 'username' : userName, 'taskid' : newTaskid, 'category' : newCat,  'title':newTitle, 'elapsed':newElapsed,  'day' : onThisDay },
+            success : function(res) {
+                // Successfully got data
+                $('#feedback').html( res );
+                console.log(res);
+
+            },     
+            error: function(err) {
+                // Unable to send data
+                console.log(err);
+                $('#feedback').html("<b>Error calling the php function</b><br>RESPONSE: " + err.responseText + "<br>STATUS: " + err.status + "<br>statusText: " + err.statusText    );
+            }
+        });  // end of $.ajax  
+
+        
+      
+    } /* insert record into database */
 
 
     function newTask(evt) {
         var catstr = $("#CategoryInput").val();
         var titlestr = $("#TitleInput").val();
+        
         /* Now add a new task to the table */
         addNewRow(true, ( parseInt(highestNumber,10) + 1), catstr, titlestr, 0);
     }
@@ -317,9 +381,23 @@ $("document").ready(function () {
             globalForceSaveData = true;
         }
         
+         globalEnableSave = false;
+        
+        
         // This fadeOut happens asynchronously
         jQuery('input:checkbox:checked').parents("tr").fadeOut(function () {
+            
+            globalEnableSave = false; 
+            
+            var $athis = $(this);
+            var $idnum = $athis.data("idnum");
+
+            removeRecordFromDatabase($idnum);
+            
             $(this).remove();
+            
+            globalEnableSave = true;
+
         });
 
         /*
@@ -334,12 +412,16 @@ $("document").ready(function () {
     **  YYYY-MM-DD
     */
     function todaysDate() {
-        var today = new Date();  
-        var dd = today.getDate();  
+        var today = new Date(); 
+        var ltoday = today.toLocaleDateString();
+        //console.log( ltoday ); // 3/19/2017
 
-        var mm = today.getMonth()+1;   
-        var yyyy = today.getFullYear();  
-        if(dd<10)   
+        // split string up
+        var res = ltoday.split("/");
+        var dd = res[1];
+        var mm = res[0];   
+        var yyyy = res[2];  
+        if(dd<10)
         {  
             dd='0'+dd;  
         }   
@@ -360,11 +442,6 @@ $("document").ready(function () {
         
         loadTaskData( "jimladeroute", todaysDate() ) ;
         
-//        var obj = data;
-//        for (var i=0; i < obj.length; i++) {
-//            addNewRow( false, obj[i].idnum, obj[i].category , obj[i].title, obj[i].elapsed );
-//        }
-        
         globalEnableSave = true;
     }
 
@@ -372,7 +449,30 @@ $("document").ready(function () {
     
     $("#CreateNew").on('click', newTask );      
     $("#RemoveSel").on('click', removeTasks );
- 
+
+    /*
+    ** The following code causes updates to tasks if the TITLE
+    ** string gets modified by the user.
+    */
+    
+    $('body').on('focus', '[contenteditable]', function () {
+        var $this = $(this);
+        $this.data('before', $this.html());
+        console.log( "focus " + $this.html());
+        return $this;
+    }).on('blur focusout', '[contenteditable]', function() {
+          var $this = $(this);
+         if ($this.data('before') !== $this.html()) {
+            $this.data('before', $this.html());
+            //alert( "focusout" );
+            console.log( "focusout " + $this.html() );
+            globalForceSaveData = true; // causes next timer update to save all the data
+            return $this;
+        }
+    });
+
+        
+    
 });
 
 /*
@@ -410,6 +510,7 @@ function storeElapsed( idnum, elapsed ) {
         if (element.textContent == idnum) {
             lastvalue = $(element).parent().data("millisecs");
             $(element).parent().data("millisecs", elapsed);         //  Update the elapsed time in milliseconds on the row obj
+            $(element).parent().data("idnum", idnum);               //  set the idnum if we didn't already
             if ( lastvalue != elapsed) {
                 $(element).parent().data("changedSinceLastSave", 1);    //  Mark the item as changed (ie. modified) used to trigger saving data to database
             }

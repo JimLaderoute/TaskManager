@@ -17,10 +17,10 @@
         $data = json_decode( $contents );
     }
 
-    //  $contents equals  [{"idnum":"1","category":"HOUSEHOLD","title":"DISHES","elapsed":"10000"},{"idnum":"2","category":"HOUSEHOLD","title":"CLEAN FLOORS","elapsed":"10000"}]
+    //  $contents equals  [{"idnum":"1","category":"HOUSEHOLD","title":"DISHES","milliseconds":"10000"},{"idnum":"2","category":"HOUSEHOLD","title":"CLEAN FLOORS","elapsed":"10000"}]
     
 	$filename = "taskdata.json.save.txt";
-    $nbytes = file_put_contents( $filename,  "data=".$contents );
+    $nbytes = file_put_contents( $filename,  "whichDay=" . $whichDay . " data=".$contents );
 
     $host = "localhost";  // localhost; 127.0.0.1 port =  55394 asof 3/9/17
     $username = "my_user";
@@ -48,7 +48,17 @@
     $mystring = '';
     $mystring = $mystring . "[$whichUser] , [$whichDay] \r\n";
 
-    $strSQL = "UPDATE elapsed, users, tasks SET elapsed.elapsed=? WHERE elapsed.day=? AND elapsed.taskid=? AND tasks.taskid=elapsed.taskid AND users.name=? AND users.userid=tasks.userid" ;
+    /*
+    ** Is there an elapsed record for the task that has some milliseconds associated with it? If not, then we have to INSERT a new record for elapsed on this day
+    */
+
+    $str0SQL = "SELECT elapsed.elapsedid FROM elapsed, tasks WHERE elapsed.taskid=tasks.taskid AND elapsed.day=? AND tasks.userid=? AND tasks.taskid=?";
+    if ( !($stmt0 = $db->prepare( $str0SQL ))) {
+        echo "Prepare failed: (" . $db->errno . ") " . $db->error ;
+        $mystring = $mystring . " Prepare failed "  . $db->errno . ") " . $db->error . "\r\n";
+    }
+
+    $strSQL = "UPDATE elapsed, users, tasks SET elapsed.milliseconds=?, tasks.title=? WHERE elapsed.day=? AND elapsed.taskid=? AND tasks.taskid=elapsed.taskid AND users.name=? AND users.userid=tasks.userid" ;
     if ( !($stmt = $db->prepare( $strSQL ))) {
         echo "Prepare failed: (" . $db->errno . ") " . $db->error ;
         $mystring = $mystring . " Prepare failed "  . $db->errno . ") " . $db->error . "\r\n";
@@ -56,14 +66,34 @@
 
     foreach ( $data as $jsonObj ) {
         $taskid  =    $jsonObj->{'idnum'} ;
-        $elapsedMS =  $jsonObj->{'elapsed'}; // in milliseconds
-        $catname =    $jsonObj->{'category'}; 
+        $elapsedMS =  $jsonObj->{'milliseconds'}; // in milliseconds
+        $catname =    $jsonObj->{'category'};
         $title =   $jsonObj->{'title'};
         
         $mystring = $mystring . "=================\r\n" ;
-        $mystring = $mystring . "UPDATE using $taskid, $catname, $title, elapsed=$elapsedMS \r\n" ;
+        $mystring = $mystring . "UPDATE using $taskid, $catname, $title, milliseconds=$elapsedMS \r\n" ;
+        
+        if ( $elapsedMS > 0 ) {
+            if (!$stmt0->bind_param( "ssi", $safeDay, $safeUser, $taskid )) {
+                $mystring = $mystring . " Binding stmt0 parameters failed " . $stmt0->errno . ") " . $stmt0->error . "\r\n" ;
+            }
+            if ( ! $stmt0->execute()) {
+                $mystring = $mystring . "execute stmt0 failed " . $stmt0->errno . ") " . $stmt0->error . "\r\n";
+            }
+            if ( !($res = $stmt0->get_result())) {
+                echo "Getting result for stmt0  failed: (" . $stmt0->errno . ") " . $stmt0->error  ;
+            }
+            if ( $res->num_rows == 0 ) {
+                /* insert new record */
+                $insertSQL = "INSERT INTO elapsed (taskid, milliseconds, day) VALUES (?, ?, ?)";
+                $mystring = $mystring . " " . $insertSQL . " " . $taskid . "," . $elapsedMS . "," . $whichDay . "\r\n";
+                $insertstmt = $db->prepare( $insertSQL );
+                $insertstmt->bind_param( "iis", $taskid, $elapsedMS, $whichDay );
+                $insertstmt->execute() ;
+            }
+        }
 
-        if ( !$stmt->bind_param( "isis", $elapsedMS,  $safeDay, $taskid, $safeUser ) ) {
+        if ( !$stmt->bind_param( "issis", $elapsedMS, $title,  $safeDay, $taskid, $safeUser ) ) {
             echo "Binding parameters failed: (" . $stmt->errno . ") " . $stmt->error ;
             $mystring = $mystring . " Binding parameters failed " . $stmt->errno . ") " . $stmt->error . "\r\n" ;
         }

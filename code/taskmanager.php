@@ -5,7 +5,7 @@
     ARGUMENT: thisDay   (in form of YYY-MM-DD )
               userName  (like  jamesladeroute )
     
-    SELECT tasks.taskid, tasks.category, tasks.title, elapsed.elapsed FROM elapsed, tasks, users WHERE  elapsed.day=thisDay AND users.userid=tasks.userid AND users.name = 'jimladeroute' ORDER BY 1,2;
+    SELECT tasks.taskid, tasks.category, tasks.title, elapsed.milliseconds FROM elapsed, tasks, users WHERE  elapsed.day=thisDay AND users.userid=tasks.userid AND users.name = 'jimladeroute' ORDER BY 1,2;
     
     $con = mysqli_connect('localhost', 'my_user', 'my_password', 'my_db');
     if (!$con) {
@@ -16,7 +16,7 @@
     }
     
     mysqli_select_db($con, "taskmanager");
-    $strSQL = "SELECT tasks.taskid, tasks.category, tasks.title, elapsed.elapsed FROM elapsed, tasks, users WHERE elapsed.day='" . $thisDay ."' AND users.userid=tasks.userid AND users.name = '". $userName . "' ORDER BY 1,2";
+    $strSQL = "SELECT tasks.taskid, tasks.category, tasks.title, elapsed.milliseconds FROM elapsed, tasks, users WHERE elapsed.day='" . $thisDay ."' AND users.userid=tasks.userid AND users.name = '". $userName . "' ORDER BY 1,2";
     $result = mysqli_query($con, $strSQL);
     while( $row = mysqli_fetch_array($result)) {
          echo $row['taskid'] . "," . $row['category'] . "," . $row['title'] . "," . $row['elapsed'] ;

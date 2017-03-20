@@ -5,7 +5,7 @@
     ARGUMENTs: whichUser   ( like  jamesladeroute )
                whichDay   ( in form of YYY-MM-DD )
     
-    SELECT tasks.taskid, tasks.category, tasks.title, elapsed.elapsed FROM elapsed, tasks, users WHERE  elapsed.day=thisDay AND users.userid=tasks.userid AND users.name = 'jimladeroute' ORDER BY 1,2,3;
+    SELECT tasks.taskid, tasks.category, tasks.title, elapsed.milliseconds FROM elapsed, tasks, users WHERE  elapsed.day=thisDay AND users.userid=tasks.userid AND users.name = 'jimladeroute' ORDER BY 1,2,3;
     
 */
 
@@ -41,7 +41,50 @@
         die('Unable to connect to database [' . $db->connect_error . ']');
     }
 
-    if ( !($stmt = $db->prepare("SELECT t.taskid, t.category, t.title, e.elapsed FROM elapsed AS e, tasks AS t, users AS u WHERE e.day=? AND e.taskid=t.taskid AND u.userid=t.userid AND u.name=? ORDER BY 1,2,3"))) {
+    /*
+    ** Get all tasks associated with the user, even if they don't have elapsed time associated with them for today
+    ** and store them into a hash table (associative table)
+    */
+    if ( !($stmt0 = $db->prepare("SELECT t.taskid, t.category, t.title FROM tasks AS t, users AS u WHERE u.userid=t.userid AND u.name=? ORDER BY 1,2,3"))) {
+        echo "Prepare stmt0 failed: (" . $db->errno . ") " . $db->error ;
+    }
+
+
+    if ( !$stmt0->bind_param("s",  $whichUser )) {
+        echo "Binding parameters stmt0 failed: (" . $stmt0->errno . ") " . $stmt0->error  ;
+    }
+
+    /*
+    ** This runs the Query
+    */
+    if ( !$stmt0->execute()) {
+        echo "Execute failed: (" . $stmt0->errno . ") " . $stmt0->error  ;
+    }
+
+
+    /*
+    ** This gets the results from the Query
+    */
+    if ( !($res = $stmt0->get_result())) {
+        echo "Getting result set from stmt0 failed: (" . $stmt0->errno . ") " . $stmt0->error  ;
+    }
+        
+    /*
+    ** And this processes the results, storing the info into an array to be passed to the client
+    */
+    $data = array();
+
+    for ($row_no = ($res->num_rows - 1); $row_no >= 0; $row_no--) {
+        $res->data_seek($row_no);
+        $row = $res->fetch_assoc();
+        $row['milliseconds'] = 0;
+        
+        $data[ $row['taskid'] ] = $row ; //  'username', 'taskid', 'category', 'title', 'elapsed', 'day'
+    }
+    $res->close();
+
+
+    if ( !($stmt = $db->prepare("SELECT t.taskid, t.category, t.title, e.milliseconds FROM elapsed AS e, tasks AS t, users AS u WHERE e.day=? AND e.taskid=t.taskid AND u.userid=t.userid AND u.name=? ORDER BY 1,2,3"))) {
         echo "Prepare failed: (" . $db->errno . ") " . $db->error ;
     }
 
@@ -71,10 +114,11 @@
     /*
     ** And this processes the results, storing the info into an array to be passed to the client
     */
-    $data = array();
+    //$data = array();
     for ($row_no = ($res->num_rows - 1); $row_no >= 0; $row_no--) {
         $res->data_seek($row_no);
-        $data[] = $res->fetch_assoc();
+        $row = $res->fetch_assoc();
+        $data[ $row['taskid']]['milliseconds'] = $row['milliseconds'];
     }
 
     $res->close();
@@ -83,30 +127,7 @@
     /*
     ** The client is expecting json encoded data
     */
-    echo json_encode( $data );
-
-/*
-    
-    $strSQL = <<<SQL
-    SELECT t.taskid, t.category, t.title, e.elapsed 
-    FROM elapsed AS e, tasks AS t, users AS u 
-    WHERE e.day='$whichDay' AND e.taskid=t.taskid AND u.userid=t.userid AND u.name='$whichUser' ORDER BY 1,2,3
-SQL;
-    
-    $result = $db->query( $strSQL );
-    if ( $result === false ) {
-        echo "ERROR - Query call returned false $strSQL" ;
-    } else {   
-        $data = array();
-        while( $row = $result->fetch_assoc()) {
-            $data[] = $row;
-        }
-        echo json_encode( $data );
-    }
-    
-*/
-
-
+    echo json_encode( array_values($data) );
 
 
 ?>
