@@ -23,7 +23,7 @@
 </div>
     
 <div id="TaskListing">
-    <table id=tm >
+    <table id="tm" >
         <thead>
         <tr>
             <th>Run</th>
@@ -32,9 +32,12 @@
             <th>Title</th>
             <th>Elapsed</th>
             <th>%</th>
+            <th>Vis</th>
             <th>Del</th>
         </tr>
         </thead>
+        <tbody>
+        </tbody>
     </table>
 </div>
     
@@ -42,13 +45,25 @@
     <button id="CreateNew">New Task</button>
     <input type="search" id="CategoryInput" name="search" placeholder="Category"></input>
     <input type="search" id="TitleInput" name="title" placeholder="Title"></input>
-    <div class="divider"/>
-<!--    <button  disabled id="RemoveSel">Delete</button> -->
-    <input name="delete" type="button" id="RemoveSel" value="Delete">
-</div>    
+    <div class="divider"></div>
+    <input title="Delete All Tasks that are selected" name="delete" type="button" id="RemoveSel" value="Delete"></input>
+    <input title="Add 1 hour" name="AddMS" type="button" id="AddMS" value="+"></input>
+    <input title="Subtract 1 hour" name="SubtractMS" type="button" id="SubtractMS" value="-"></input>
+    <label>Showing:</label>
+
+<select name="showHiddenChoices" >
+  <option selected="selected">Visible</option>
+  <option>Hidden</option>
+  <option>Both</option>
+</select>
+
+
+</div>
     
+<!-- this feedback area is for debugging the application -->
 <div id="feedback">
 </div>
+
 </body>
 
 </html>

@@ -48,14 +48,33 @@ o Saving changes out to a JSON file under WAMP server
 o Setup Beagle-bone as a web server and able to run TaskManager from it now.
 o Debugged some asynchronous issue and a couple other coding bugs
 
+3/20/2017
+
+o Converted the code from using json text files to using a MySql database
+
+3/24/2017
+
+o Added [HIDE] column to hide tasks but not delete them
+o Added Options to Show [Visible|Hidden|Both], so you can show hidden tasks and flip them back to visible if you wish
+o Added [+] and [-] buttons; to add or subtract 1 hour's worth of time for the selected tasks
+
+
 
 FUTURE TO DOS
 
-o Modify Existing Tasks (edit category, title, add/subtract hours or minutes from elapsed time)
+o Modify Existing Tasks (add/subtract hours or minutes from elapsed time, view previous days work)
 o I'm currently using <table> object for the info. I believe there is a nicer TABLE .js package out there that I could use. Probably would allow sorting of columns and resizing of columns. https://datatables.net/
 o Allow more than one person at a time to use this ( username based )
+    + Add Login and Register screens
 o Learn how to run regression tests on this - Node.js ; nodeunit ; Mocha ; Vows ; Zombie ...
-o Learn about AngularJS and incorporate learnings into this application
+o Learn about AngularJS and incorporate learnings into this application (if useful)
+o Get it working fully on BeagleBone with MySql
+o Dan to design the look and feel
+o Allow ADMIN to view tasks of all users
+
+https://github.com/NJJLClub/TaskManager  
+
+
 
 
 

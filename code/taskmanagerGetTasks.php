@@ -11,6 +11,7 @@
 
     $whichDay = date('Y-m-d'); // this gets you today's date - but on the server which could be in a different timezone!
     $whichUser = 'anybody';    // there is no anybody user unless one is created in the database ; maybe allow this for testing?
+    $isHidden = 0;             // by default only show those items that have not been hidden, hide the hidden ones
 
     if(isset($_GET['whichDay'])) {
         $whichDay = $_GET['whichDay'] ;
@@ -18,6 +19,11 @@
     
     if(isset($_GET['whichUser'])) {
         $whichUser = $_GET['whichUser'];
+    }
+
+    // allow caller to control to see only HIDDEN or only NON-HIDDEN tasks
+    if(isset($_GET['isHidden'])) {
+        $isHidden = $_GET['isHidden']; // 0=show non-hidden;   1=show only hidden tasks,  anything other than 0|1=show both hidden and non-hidden
     }
 
     $host = "localhost"; // port =  55394 asof 3/9/17
@@ -45,14 +51,26 @@
     ** Get all tasks associated with the user, even if they don't have elapsed time associated with them for today
     ** and store them into a hash table (associative table)
     */
-    if ( !($stmt0 = $db->prepare("SELECT t.taskid, t.category, t.title FROM tasks AS t, users AS u WHERE u.userid=t.userid AND u.name=? ORDER BY 1,2,3"))) {
+    $stmt0str = "SELECT t.taskid, t.category, t.title, t.isHidden FROM tasks AS t, users AS u WHERE u.userid=t.userid";
+    if ( $isHidden==0 or $isHidden==1) {
+        $stmt0str = $stmt0str . " AND t.isHidden=? ";
+    }
+    $stmt0str = $stmt0str . " AND u.name=? ORDER BY 1,2,3";
+
+    if ( !($stmt0 = $db->prepare($stmt0str))) {
         echo "Prepare stmt0 failed: (" . $db->errno . ") " . $db->error ;
     }
 
-
-    if ( !$stmt0->bind_param("s",  $whichUser )) {
-        echo "Binding parameters stmt0 failed: (" . $stmt0->errno . ") " . $stmt0->error  ;
+    if ( $isHidden ==0 or $isHidden==1 ) {
+        if ( !$stmt0->bind_param("is", $isHidden, $whichUser )) {
+            echo "Binding parameters stmt0 failed: (" . $stmt0->errno . ") " . $stmt0->error  ;
+        }        
+    }  else {
+        if ( !$stmt0->bind_param("s",  $whichUser )) {
+            echo "Binding parameters stmt0 failed: (" . $stmt0->errno . ") " . $stmt0->error  ;
+        }
     }
+
 
     /*
     ** This runs the Query
@@ -84,7 +102,13 @@
     $res->close();
 
 
-    if ( !($stmt = $db->prepare("SELECT t.taskid, t.category, t.title, e.milliseconds FROM elapsed AS e, tasks AS t, users AS u WHERE e.day=? AND e.taskid=t.taskid AND u.userid=t.userid AND u.name=? ORDER BY 1,2,3"))) {
+    $stmt1str = "SELECT t.taskid, t.category, t.title, t.isHidden, e.milliseconds FROM elapsed AS e, tasks AS t, users AS u WHERE e.day=? AND e.taskid=t.taskid ";
+    if ( $isHidden==0 or $isHidden==1) {
+        $stmt1str = $stmt1str . " AND t.isHidden=? ";
+    }
+    $stmt1str = $stmt1str . " AND u.userid=t.userid AND u.name=? ORDER BY 1,2,3";
+
+    if ( !($stmt = $db->prepare($stmt1str))) {
         echo "Prepare failed: (" . $db->errno . ") " . $db->error ;
     }
 
@@ -93,9 +117,16 @@
     ** i = int,  d = double,  s = string, b = blob
     ** NOTE: do NOT pass the variables by reference or you will get an error ; some resources say to pass by reference
     */
-    if ( !$stmt->bind_param("ss", $whichDay, $whichUser )) {
+    
+if ( $isHidden ==0 or $isHidden==1 ) {
+    if ( !$stmt->bind_param("sis", $whichDay, $isHidden, $whichUser )) {
         echo "Binding parameters failed: (" . $stmt->errno . ") " . $stmt->error  ;
     }
+} else {
+    if ( !$stmt->bind_param("ss", $whichDay, $whichUser )) {
+        echo "Binding parameters failed: (" . $stmt->errno . ") " . $stmt->error  ;
+    }  
+}
 
     /*
     ** This runs the Query

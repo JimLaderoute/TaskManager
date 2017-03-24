@@ -5,10 +5,9 @@ $("document").ready(function () {
     var highestNumber = 1, timePeriod = 1000, timerVar = setTimeout(timeoutCallback, timePeriod);
     var globalEnableSave = false;
     var globalForceSaveData = false;
-
+    var globalUserName = 'jimladeroute';
+    var globalShowState = "Visible"; //   Visible|Hidden|Both
     
-    
-
     
     function convertToMillisec(hr_min_sec) {
         var timearr = hr_min_sec.split(":"), ms = 0;
@@ -44,7 +43,7 @@ $("document").ready(function () {
         console.log("HighestNumber is " + highestNumber);
         
         if ( globalForceSaveData == true ) {
-            saveTaskData( 'jimladeroute', todaysDate() );
+            saveTaskData( globalUserName, todaysDate() );
             globalForceSaveData = false;
         }
         
@@ -65,34 +64,17 @@ $("document").ready(function () {
         
         if ( nChecked > 0 ) {
             $("input[name=delete]").removeAttr('disabled');
+            $("input[name=AddMS]").removeAttr('disabled');
+            $("input[name=SubtractMS]").removeAttr('disabled');
         }
         else {
             $("input[name=delete]").attr('disabled','disabled');
+            $("input[name=AddMS]").attr('disabled','disabled');
+            $("input[name=SubtractMS]").attr('disabled','disabled');
         }
               
         // second traverse to add the timeChunk to each that are turned ON
-        
-        $("#TaskListing table tr td#Begin input").each(function (index, element) {
-
-            // element is a table-row-td input-checkbox
-            // See if the toggle button is checked or not-checked
-            if (element.checked) {
-                
-                var theRow = $(element).parent().parent();              // get the parent row <tr> of the checkbox-input
-                var currentvalue = $(theRow).data("millisecs");         // get last stored millisec elapsed time
-                var newvalue = parseInt(currentvalue) + timeChunk;                // add in the time chunk to get new elapsed time
-                $(theRow).data("millisecs", newvalue);                  // save back on the object as data to the row
-                $(theRow).data("changedSinceLastSave", 1);              // marks this row as changed (ie. updated)
-                
-                var theTimer = $(theRow).children("tr td#Time:first");  // get the Time data field and update
-                theTimer.text(millisecToHrMinSec(newvalue));
-                
-                globalForceSaveData = true;
-                
-            }
-        });
-        
-        refreshPercent(); // Updates the percent column for every task in the table
+        changeMS( timeChunk ) ;
         
         timerVar = setTimeout(timeoutCallback, timePeriod); // Restart the timer for the next N seconds 
     }
@@ -106,12 +88,25 @@ $("document").ready(function () {
     */
     
     function loadTaskData( forThisUser, onThisDay ) {
+        
+        isHidden = 0; // default to showing Not Hidden tasks
+        if ( globalShowState == "Hidden" ) {
+            isHidden = 1;
+        } else if ( globalShowState == "Both" ) {
+            isHidden = 3;
+        }
+        
+        /*
+        ** NOTE: to set the checked value
+        **
+        **   $("#showOnlyHidden").prop("checked", true) 
+        */
  
         $.ajax({
             url : "taskmanagerGetTasks.php" ,     // server side script
             type : 'GET',                        // NOTE:  type: is an alias for method:  -- you must use method: prior to jQuery 1.9.0
             cache: false, 
-            data : {'whichUser' : forThisUser, 'whichDay': onThisDay },
+            data : {'whichUser' : forThisUser, 'whichDay': onThisDay, 'isHidden' : isHidden },
             dataType : 'json',                   // NOTE:  dataType: is the type of data that you're expecting back from the server
             success : function(json) {
                 // Successfully got data
@@ -119,7 +114,7 @@ $("document").ready(function () {
                 $.each(json, function(i, item) {
                     if(typeof item == 'object') {
                         // taskid category  title elapsed(ms) 
-                        addNewRow( false, item['taskid'], item['category'], item['title'], item['milliseconds'] );
+                        addNewRow( false, item['taskid'], forThisUser, item['category'], item['title'], item['isHidden'], item['milliseconds'] );
                     }
                     else {
                         return false;
@@ -251,18 +246,23 @@ $("document").ready(function () {
         */
         
         if ( changes > 0 ) {
-            saveTaskData( 'jimladeroute', todaysDate() );
+            saveTaskData( globalUserName, todaysDate() );
         }
     }
 
     /*
     ** This function adds a new row of task information to the table
     */
-    function addNewRow(startTimer, idnum, catstr, titlestr, elapsed) {
+    function addNewRow(startTimer, idnum, thisUserName, catstr, titlestr, hiddenValue, elapsed) {
         var ischecked = "", totalTimeMs = 0;
         
         if (startTimer) {
             ischecked = "checked";
+        }
+        
+        visState = "visibleState"; //  hiddenState
+        if ( hiddenValue == 1) {
+            visState = "hiddenState";
         }
         
         //console.log("calling addNewRow with param idnum=" + idnum );
@@ -286,7 +286,8 @@ $("document").ready(function () {
               "<td class=Title id=Title contenteditable='true'>" + titlestr + "</td>" +
               "<td class=Time id=Time ondblclick=\"editElapsedTime(" + idnum + ")\">" + timeStr + "</td>" +
               "<td class=Percent id=Percent>0</td>" +
-              "<td class=Trash id=Trash><input name=TrashInput" + idnum + " type=image src=trashcan.jpg height=30 width=30 /></td>" +
+              "<td class=Hide  id=Hide><input name=HideInput" + idnum + " type=image src=" + visState + ".png height=30 width=30 /></td>" +
+              "<td class=Trash id=Trash><input name=TrashInput" + idnum + " type=image src=trashcan.png height=30 width=30 /></td>" +
             "</tr>"
         );
         
@@ -294,7 +295,7 @@ $("document").ready(function () {
         storeElapsed( idnum, elapsed ); // store the elapsed time in millisecond units for accuracy
         
         if ( startTimer ) {
-            insertRecordIntoDatabase( 'jimladeroute', idnum, catstr, titlestr, elapsed );
+            insertRecordIntoDatabase( thisUserName, idnum, catstr, titlestr, elapsed );
         }
         
         if ( elapsed > 0 ) {
@@ -307,14 +308,70 @@ $("document").ready(function () {
            $(this).parent().parent().fadeOut(function () {
                 removeRecordFromDatabase( idnum ); // this removes the item from the database
                 $(this).remove();
-// should not need to do this anylonger=>               globalForceSaveData = true; // next refresh will save the data
             }); // removes the row when user clicks on the trashcan
             
+        });
+        
+        // Add a callback function when the user clicks on the Hide icon per row
+        $("input[name=HideInput" + idnum + "]").click(function (ev) {
+            // input.td.tr 
+            var showStateOption = globalShowState ;      // what is the SHOWING: option set to
+            var hiddenState = getVisState( idnum )  ;         // What is the visible state of THIS task
+            var newState ;
+            switch( hiddenState ) {
+                case 0:
+                    newState = 1;
+                    break;
+                case 1:
+                    newState = 0;
+                    break;
+                default:
+                    newState = 1;
+                    break;
+            }
+            
+            hideRecordFromDatabase( thisUserName, idnum, newState ); // this marks it as hidden in the database but does not delete it
+
+            if ( showStateOption != "Both" ) {
+                $(this).parent().parent().fadeOut(function () {
+                    $(this).remove(); // this removes the row from the UI
+                });
+            } else {
+                // change the VisibleState icon {@tbd@}
+                //"<td class=Hide  id=Hide><input name=HideInput" + idnum + " type=image src=" + visState + ".png height=30 width=30 /></td>" +
+                var newSrc ="visibleState.png";
+                if ( newState == 1) {
+                    newSrc = "hiddenState.png";
+                }
+                $("input[name=HideInput" + idnum + "]").attr('src', newSrc);
+            }
+            
+
         });
         
 
         
         
+    }
+    
+    function getVisState( idnum ) {
+        // returns 0=visible 1=hidden 
+        var retState;
+        var srcName = $("input[name=HideInput" + idnum + "]").attr('src');
+        console.log( "srcName: " + srcName  );
+        
+        switch( srcName ) {
+            case 'visibleState.png':
+                retState = 0;  // visible  isHidden=0
+                break;
+            case 'hiddenState.png':
+                retState = 1; //  hidden isHidden=1
+                break;
+            default:
+                retState = 0; // default to visible if we don't know
+        }
+        
+        return retState;
     }
     
     function removeRecordFromDatabase( taskid ) {
@@ -337,6 +394,35 @@ $("document").ready(function () {
         });  // end of $.ajax  
         
     }
+    
+    /*
+    **  Params:
+    **      userName : string
+    **      taskId : number
+    **      newVisState : TINYINT 0,1
+    */
+    function hideRecordFromDatabase(  userName, taskid, newVisState ) {
+        $.ajax({
+            url : "taskmanagerHideTask.php" ,     // server side script
+            type : 'POST',                        // NOTE:  type: is an alias for method:  -- you must use method: prior to jQuery 1.9.0
+            cache: false, 
+            data : {  'taskid' : taskid , 'username' : userName, 'visibility' : newVisState },
+            success : function(res) {
+                // Successfully got data
+                $('#feedback').html( res );
+                console.log(res);
+
+            },     
+            error: function(err) {
+                // Unable to send data
+                console.log(err);
+                $('#feedback').html("<b>Error calling taskmanagerHideTask</b><br>RESPONSE: " + err.responseText + "<br>STATUS: " + err.status + "<br>statusText: " + err.statusText    );
+            }
+        });  // end of $.ajax  
+        
+    }
+
+    
     function insertRecordIntoDatabase( userName, newTaskid , newCat, newTitle, newElapsed ) {
 
         onThisDay = todaysDate() ;
@@ -367,9 +453,54 @@ $("document").ready(function () {
     function newTask(evt) {
         var catstr = $("#CategoryInput").val();
         var titlestr = $("#TitleInput").val();
+        var usernamestr = globalUserName ;
+        var hiddenValue = 0;  // not hidden
         
         /* Now add a new task to the table */
-        addNewRow(true, ( parseInt(highestNumber,10) + 1), catstr, titlestr, 0);
+        addNewRow(true, ( parseInt(highestNumber,10) + 1), usernamestr, catstr, titlestr, hiddenValue, 0);
+    }
+    
+    function changeMS( timeChunk ) {
+    
+        $("#TaskListing table tr td#Begin input").each(function (index, element) {
+
+            // element is a table-row-td input-checkbox
+            // See if the toggle button is checked or not-checked
+            if (element.checked) {
+
+                var theRow = $(element).parent().parent();              // get the parent row <tr> of the checkbox-input
+                var currentvalue = $(theRow).data("millisecs");         // get last stored millisec elapsed time
+                var newvalue = parseInt(currentvalue) + timeChunk;      // add in the time chunk to get new elapsed time
+                if ( newvalue < 0 ) {
+                    newvalue = 0;
+                }
+                $(theRow).data("millisecs", newvalue);                  // save back on the object as data to the row
+                $(theRow).data("changedSinceLastSave", 1);              // marks this row as changed (ie. updated)
+
+                var theTimer = $(theRow).children("tr td#Time:first");  // get the Time data field and update
+                theTimer.text(millisecToHrMinSec(newvalue));
+
+                globalForceSaveData = true;
+
+            }
+        });
+        
+        refreshPercent(); // Updates the percent column for every task in the table
+    }
+    
+    function addTimeFromSel(evt) {
+        var nChecked = $('input:checkbox:checked').length;
+        if ( nChecked == 0 ) {
+            return ;
+        }
+        changeMS( 1000 * 60 * 60 ) ; // one hour::  1000ms x 60 = 1 minute x 60 = 1 hour
+    }
+    function subtractTimeFromSel(evt) {
+        var nChecked = $('input:checkbox:checked').length;
+        if ( nChecked == 0 ) {
+            return ;
+        }
+        changeMS( -1000 * 60 * 60 ) ; // one hour
     }
        
     function removeTasks(evt) {
@@ -377,33 +508,38 @@ $("document").ready(function () {
        
         // count up how many checkboxes are checked
         var nRemoved = $('input:checkbox:checked').length;
-        if ( nRemoved > 0 ) {
-            globalForceSaveData = true;
+        var r = confirm("Are You Sure You Want To Delete?");
+        if ( r == true ) {
+            
+            if ( nRemoved > 0 ) {
+                globalForceSaveData = true;
+            }
+
+            globalEnableSave = false;
+
+
+            // This fadeOut happens asynchronously
+            jQuery('input:checkbox:checked').parents("tr").fadeOut(function () {
+
+                globalEnableSave = false; 
+
+                var $athis = $(this);
+                var $idnum = $athis.data("idnum");
+
+                removeRecordFromDatabase($idnum);
+
+                $(this).remove();
+
+                globalEnableSave = true;
+
+            });
+
+            /*
+            ** Disable the Delete button - we only re-enable it when a task's elapsed time is changing
+            */
+            $("input[name=delete]").attr('disabled','disabled');           
         }
-        
-         globalEnableSave = false;
-        
-        
-        // This fadeOut happens asynchronously
-        jQuery('input:checkbox:checked').parents("tr").fadeOut(function () {
-            
-            globalEnableSave = false; 
-            
-            var $athis = $(this);
-            var $idnum = $athis.data("idnum");
 
-            removeRecordFromDatabase($idnum);
-            
-            $(this).remove();
-            
-            globalEnableSave = true;
-
-        });
-
-        /*
-        ** Disable the Delete button - we only re-enable it when a task's elapsed time is changing
-        */
-        $("input[name=delete]").attr('disabled','disabled');
 
     }
     
@@ -433,22 +569,40 @@ $("document").ready(function () {
         
         return( yyyy+'-'+mm+'-'+dd );
     }
+    
+    function showHiddenStateChanged() {
+        
+    }
 
     /*
     ** Read the JSON data and display it
     */
-    function populate() {
+    function populate( thisUserName ) {
         globalEnableSave = false;
         
-        loadTaskData( "jimladeroute", todaysDate() ) ;
+        $("#tm tbody").empty();
+        
+        loadTaskData( thisUserName, todaysDate() ) ;
         
         globalEnableSave = true;
     }
 
-    populate();
+    populate(globalUserName);
     
     $("#CreateNew").on('click', newTask );      
     $("#RemoveSel").on('click', removeTasks );
+    $("#AddMS").on('click', addTimeFromSel );
+    $("#SubtractMS").on('click', subtractTimeFromSel ) ;
+    $("select").change( function() {
+        var str = "";
+        $( "select option:selected").each(function() {
+            str += $(this).text() ; // if doing multiple selection then add '+ " "' each time
+        });
+        
+        globalShowState = str;
+    
+        populate(globalUserName);
+    });
 
     /*
     ** The following code causes updates to tasks if the TITLE
